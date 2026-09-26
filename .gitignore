@@ -1,0 +1,14 @@
+# Data is large and comes from UNB CIC / Kaggle; never commit it.
+data/*
+!data/README.md
+
+# Saved models can be hundreds of MB.
+results/models/
+
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+.DS_Store

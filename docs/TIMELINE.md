@@ -5,6 +5,8 @@
 **Window:** Sun 27 Sep 2026 → Sat 17 Oct 2026 (21 days, final submission on Day 21)
 **Assumed effort:** ~3–4 focused hours/day on weekdays, more on weekends. Each week ends with a buffer/catch-up day.
 
+> **Code status:** the whole pipeline is already in `src/` and tested on fake data (see the README). Where a day below says to build something, the job is now to **read that module, run it on the real data, and check the output makes sense**. The time saved is extra buffer; spend it on the analysis and the write-up.
+
 ---
 
 ## At a glance
@@ -37,12 +39,12 @@ The project must go beyond reproducing the paper. The three parts, and what each
 
 | Day | Date | Tasks | Output |
 |-----|------|-------|--------|
-| 1 | Sun 27 Sep | Read Neto et al. (2023) closely: dataset construction, the 46 features, the 34 → 8 → 2 label grouping, the ML setup (models, split, scaling, metrics). Copy the paper's reported numbers into a "target" table. **Get the data**: either download CSVs from the UNB CIC page (form) or use a Kaggle mirror inside a Kaggle Notebook (no 13 GB download, ~30 GB RAM). Set up the environment (Python 3.11, pandas, pyarrow, scikit-learn, imbalanced-learn, matplotlib, seaborn). | `notes/paper_notes.md`, target-numbers table, data accessible, `requirements.txt` |
-| 2 | Mon 28 Sep | **Data loader**: read CSV parts in chunks, cast to `float32`, draw a **uniform per-class random sample** (e.g. 5–10% of every class — keeps the real imbalance ratio, which is what we're studying). Add label mappings 34-class → 8-class → 2-class. Save the sample as Parquet. | `src/load.py`, `data/sample.parquet` (gitignored) |
-| 3 | Tue 29 Sep | **EDA**: class counts at 34/8/2 levels (log-scale bar chart), imbalance ratios (majority ÷ each class), NaN/inf/duplicate check, feature distributions, correlation heatmap. | `notebooks/01_eda.ipynb`, **Fig. 1: class imbalance** (motivation figure for the report) |
-| 4 | Wed 30 Sep | **Preprocessing + evaluation harness**: clean inf/NaN, decide on duplicates, **stratified 80/20 split — save test indices and never touch the test set again**. Scaler fit on train only. Write one reusable `evaluate()` that logs accuracy, macro/weighted precision, recall, F1, per-class report, normalized confusion matrix, balanced accuracy, train time and inference time → CSV/JSON. | `src/preprocess.py`, `src/evaluate.py`, frozen split |
-| 5 | Thu 1 Oct | **Baseline, 8-class**: Decision Tree and Random Forest (100 trees, `n_jobs=-1`, fixed seed). Also 2-class (quick). | `results/baseline_8class.csv`, confusion matrices |
-| 6 | Fri 2 Oct | **Baseline, 34-class**. Compare all baselines against the paper's numbers; write down every gap and its likely cause (subset size, hyperparameters, preprocessing). Build the **per-class recall table** and name the weak classes (expect Web-based, Brute Force, possibly Spoofing/Recon). | `results/baseline_34class.csv`, reproduction comparison table |
+| 1 | Sun 27 Sep | Read Neto et al. (2023) closely: dataset construction, the 46 features, the 34 → 8 → 2 label grouping, the ML setup (models, split, scaling, metrics). Copy the paper's reported numbers into a "target" table. **Get the data**: either download CSVs from the UNB CIC page (form) or use a Kaggle mirror inside a Kaggle Notebook (no 13 GB download, ~30 GB RAM). Set up the environment (`pip install -r requirements.txt`, then `python -m pytest -q`). | `docs/paper_notes.md` filled in, data accessible, tests passing |
+| 2 | Mon 28 Sep | **Data loader**: read CSV parts in chunks, cast to `float32`, draw a **uniform per-class random sample** (e.g. 5–10% of every class — keeps the real imbalance ratio, which is what we're studying). Add label mappings 34-class → 8-class → 2-class. Save the sample as Parquet. | `python -m src.load` → `data/processed/sample.parquet` (gitignored) |
+| 3 | Tue 29 Sep | **EDA**: class counts at 34/8/2 levels (log-scale bar chart), imbalance ratios (majority ÷ each class), NaN/inf/duplicate check, feature distributions, correlation heatmap. | `python -m src.eda` → `results/eda/`, **Fig. 1: class imbalance** (motivation figure for the report) |
+| 4 | Wed 30 Sep | **Preprocessing + evaluation harness**: clean inf/NaN, decide on duplicates, **stratified 80/20 split — save test indices and never touch the test set again**. Scaler fit on train only. Write one reusable `evaluate()` that logs accuracy, macro/weighted precision, recall, F1, per-class report, normalized confusion matrix, balanced accuracy, train time and inference time → CSV/JSON. | `python -m src.preprocess` → frozen split; `src/evaluate.py` |
+| 5 | Thu 1 Oct | **Baseline, 8-class**: Decision Tree and Random Forest (100 trees, `n_jobs=-1`, fixed seed). Also 2-class (quick). | `scripts/run_experiments.sh baseline` → rows in `results/runs.csv`, confusion matrices |
+| 6 | Fri 2 Oct | **Baseline, 34-class**. Compare all baselines against the paper's numbers; write down every gap and its likely cause (subset size, hyperparameters, preprocessing). Build the **per-class recall table** and name the weak classes (expect Web-based, Brute Force, possibly Spoofing/Recon). | 34-class rows in `results/runs.csv`, reproduction comparison table in `docs/paper_notes.md` |
 | 7 | Sat 3 Oct | **Buffer + writing**: Report — Introduction, Related Work (use the course reading list: Khan et al. MQTT IDS, Rabbani et al. CIC IoT-DIAD 2024, the LightGBM MQTT IDS paper, Neto et al.), Dataset section, Baseline Methodology. | Report draft §1–§3 |
 
 **✅ Checkpoint 1 (end of Week 1):** Baseline reproduced on a frozen test set, weak classes identified, Fig. 1 + reproduction table ready. *If behind: drop 34-class to Week 2's buffer day and continue with 8-class.*
@@ -53,11 +55,11 @@ The project must go beyond reproducing the paper. The three parts, and what each
 
 | Day | Date | Tasks | Output |
 |-----|------|-------|--------|
-| 8 | Sun 4 Oct | Read Chawla et al. (2002) SMOTE and the imbalanced-learn docs. **Design the sampling strategies** (applied to the *training set only*): **S1** SMOTE — raise minority classes to a target size via a `sampling_strategy` dict (do **not** oversample everything up to DDoS size — memory will blow up); **S2** hybrid — SMOTE on minorities + RandomUnderSampler on DDoS/DoS; **S3** `class_weight='balanced'` (algorithm-level reference, no resampling). Time SMOTE on a small slice first. | `src/resample.py`, runtime estimate |
-| 9 | Mon 5 Oct | Run **S1 (SMOTE)** for DT and RF, 8-class. | `results/smote_8class.csv` |
-| 10 | Tue 6 Oct | Run **S2 (hybrid)** and **S3 (class weights)**, 8-class. Start 34-class SMOTE if time allows. | `results/hybrid_8class.csv`, `results/classweight_8class.csv` |
-| 11 | Wed 7 Oct | **Ablations**: minority target size (e.g. 10k / 50k / 100k), SMOTE `k_neighbors` (3 / 5). Re-run the best configs with **3 seeds** and report mean ± std. Finish 34-class SMOTE. **Gate:** if none of S1–S3 beats the baseline on minority recall, add per-class decision-threshold tuning on a validation split today. | `results/ablation_smote.csv` |
-| 12 | Thu 8 Oct | **Analysis**: baseline vs S1/S2/S3 per-class recall/precision/F1 table; confusion-matrix diff; recall-gain bar chart per class. Discuss the precision trade-off on minority classes (SMOTE usually raises recall but can lower precision). | Figs. 2–4, main results table |
+| 8 | Sun 4 Oct | Read Chawla et al. (2002) SMOTE and the imbalanced-learn docs. **Design the sampling strategies** (applied to the *training set only*): **S1** SMOTE — raise minority classes to a target size via a `sampling_strategy` dict (do **not** oversample everything up to DDoS size — memory will blow up); **S2** hybrid — SMOTE on minorities + RandomUnderSampler on DDoS/DoS; **S3** `class_weight='balanced'` (algorithm-level reference, no resampling). Time SMOTE on a small slice first. | `src/resample.py` understood, runtime estimate |
+| 9 | Mon 5 Oct | Start `scripts/run_experiments.sh improvement` (all strategies × DT/RF × 3 seeds). Check the **S1 (SMOTE)** results first. | SMOTE rows in `results/runs.csv` |
+| 10 | Tue 6 Oct | Run **S2 (hybrid)** and **S3 (class weights)**, 8-class. Start 34-class SMOTE if time allows. | hybrid and class-weight rows in `results/runs.csv` |
+| 11 | Wed 7 Oct | **Ablations**: minority target size (e.g. 10k / 50k / 100k), SMOTE `k_neighbors` (3 / 5). Re-run the best configs with **3 seeds** and report mean ± std. Finish 34-class SMOTE. **Gate:** if none of S1–S3 beats the baseline on minority recall, add per-class decision-threshold tuning on a validation split today. | ablation rows in `results/runs.csv` (use `--tag` for non-default settings) |
+| 12 | Thu 8 Oct | **Analysis** (`python -m src.analyze compare`): baseline vs S1/S2/S3 per-class recall/precision/F1 table; confusion-matrix diff; recall-gain bar chart per class. Discuss the precision trade-off on minority classes (SMOTE usually raises recall but can lower precision). | Figs. 2–4, main results table |
 | 13 | Fri 9 Oct | **Write**: Methodology (SMOTE, strategies, leakage precautions) and Results §1 (rebalancing). | Report draft §4–§5.1 |
 | 14 | Sat 10 Oct | **Buffer / catch-up.** Show interim results to your guide if possible. | — |
 
@@ -69,9 +71,9 @@ The project must go beyond reproducing the paper. The three parts, and what each
 
 | Day | Date | Tasks | Output |
 |-----|------|-------|--------|
-| 15 | Sun 11 Oct | **Feature ranking** on the training split: mutual information (`mutual_info_classif` on a ~200k-row stratified subsample — it's slow on millions of rows) and RF importance / RFE (on a subsample). Rank on the real (pre-SMOTE) training rows so the synthetic points don't bias the ranking; if you also rank on rebalanced data (as the abstract says), compare the two rankings. | `src/feature_selection.py`, ranked feature list |
-| 16 | Mon 12 Oct | **Top-k sweep** with the best Week-2 configuration: k ∈ {5, 10, 15, 20, 30, 46}. Pipeline: select top-k → SMOTE on those features → train → evaluate. Log macro-F1, minority-class recall, **train time, inference latency per 1k flows, model size on disk, tree node count**. | `results/feature_sweep.csv` |
-| 17 | Tue 13 Oct | Plots: performance vs k and cost vs k; pick final k. *Optional:* time inference on a Raspberry Pi to back the gateway claim. **Freeze all results.** Clean the repo: README (how to run), `requirements.txt`, `.gitignore` for data, results tables committed. | Figs. 5–6, final k, clean repo |
+| 15 | Sun 11 Oct | **Feature ranking** on the training split: mutual information (`mutual_info_classif` on a ~200k-row stratified subsample — it's slow on millions of rows) and RF importance / RFE (on a subsample). Rank on the real (pre-SMOTE) training rows so the synthetic points don't bias the ranking; if you also rank on rebalanced data (as the abstract says), compare the two rankings. | `python -m src.feature_selection` → `results/features/ranking_*.csv` |
+| 16 | Mon 12 Oct | **Top-k sweep** with the best Week-2 configuration: k ∈ {5, 10, 15, 20, 30, 46}. Pipeline: select top-k → SMOTE on those features → train → evaluate. Log macro-F1, minority-class recall, **train time, inference latency per flow, model size on disk, tree node count**. | `scripts/run_experiments.sh extension` → `results/tables/sweep_*.csv` |
+| 17 | Tue 13 Oct | Plots (`python -m src.analyze sweep`): performance vs k and cost vs k; pick final k (on the validation metrics). *Optional:* time inference on a Raspberry Pi to back the gateway claim. **Freeze all results.** Update the README with the final results; commit `results/` (tables and figures; models stay out). | Figs. 5–6, final k, clean repo |
 | 18 | Wed 14 Oct | **Write**: Results §2 (feature selection), Discussion, Limitations (subset size, no replay-attack class, single dataset), Conclusion and Future Work; finalize the Abstract with real numbers. | Full report draft |
 | 19 | Thu 15 Oct | **Slides** (~10–12): problem → dataset & imbalance → baseline → SMOTE results → feature selection → takeaways. Proofread the report, check references and figure/table numbering. | Slides v1, report v2 |
 | 20 | Fri 16 Oct | Rehearse the talk (timed), fix slides. **Reproducibility check**: re-run the pipeline from a clean environment and confirm the numbers match. | Final slides, verified code |
@@ -106,15 +108,16 @@ Accuracy, macro and weighted precision/recall/F1, **per-class recall and F1**, b
 2. Scaler, SMOTE, undersampling and feature ranking are all fit on the **training split only**.
 3. Hyperparameter or k choices are made on a validation split / CV within the training data, not on the test set.
 
-## Proposed repo layout
+## Repo layout
 
 ```
 data/            # raw + sampled data (gitignored)
-src/             # load.py, preprocess.py, resample.py, feature_selection.py, evaluate.py, train.py
-notebooks/       # 01_eda, 02_baseline, 03_smote, 04_feature_selection
-results/         # CSV tables + figures
-report/          # report source + final PDF
-slides/
+src/             # load, preprocess, eda, resample, train, feature_selection, evaluate, analyze, plots
+scripts/         # run_experiments.sh {baseline|improvement|extension}
+tests/           # fake data + end-to-end test
+results/         # runs.csv, per-class tables, confusion matrices, figures
+report/          # report source + final PDF (add in Week 1)
+slides/          # (add in Week 3)
 docs/            # course brief, this timeline, paper notes
 ```
 
