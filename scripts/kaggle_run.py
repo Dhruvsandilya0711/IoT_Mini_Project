@@ -6,8 +6,15 @@ Paste into ONE code cell of a new Kaggle notebook (with the CICIoT2023 dataset a
     %cd IoT_Mini_Project
     !python scripts/kaggle_run.py
 
-Options: --frac 0.03 (share of rows sampled), --seeds "0 1 2", --input /kaggle/input, --work /kaggle/working.
-results.zip is rewritten after every phase, so a timeout still leaves usable results.
+Options: --frac 0.03 (share of rows sampled), --seeds "0 1 2", --hours 11 (time budget),
+--phases (default: baseline improvement extension duplicates), --input /kaggle/input, --work /kaggle/working.
+
+Exact duplicate rows are removed before the main split (copies of test rows inside the training data
+inflate the scores). A second split that keeps them is used by the 'duplicates' phase, which gives
+numbers comparable with the base paper and measures how much the duplicates inflate them.
+
+results.zip is rewritten after every phase, and new runs stop once the time budget is used, so a
+Kaggle session (12 h limit) always ends with usable results.
 """
 
 import argparse
@@ -59,8 +66,9 @@ def link_raw_files(input_dir, raw_dir):
 
 def pack(work, note):
     os.makedirs("results/data_info", exist_ok=True)
-    for f in glob.glob("data/processed/*.json"):
-        shutil.copy(f, "results/data_info/")
+    for f in glob.glob("data/processed*/*.json"):
+        name = os.path.basename(f) if "withdups" not in f else "withdups_" + os.path.basename(f)
+        shutil.copy(f, os.path.join("results/data_info", name))
     shutil.make_archive(f"{work}/results", "zip", "results")
     print(f"\n>>> results.zip updated after: {note}\n", flush=True)
 
@@ -71,29 +79,34 @@ def main():
     parser.add_argument("--seeds", default="0 1 2")
     parser.add_argument("--input", default="/kaggle/input")
     parser.add_argument("--work", default="/kaggle/working")
-    parser.add_argument("--phases", nargs="+", default=["baseline", "improvement", "extension"])
+    parser.add_argument("--phases", nargs="+", default=["baseline", "improvement", "extension", "duplicates"])
+    parser.add_argument("--hours", type=float, default=11.0, help="stop starting new runs after this many hours")
     args = parser.parse_args()
 
     os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     start = time.time()
-    sh(f"{sys.executable} -m pip install -q 'imbalanced-learn>=0.12' 'pyarrow>=14'")
+    sh(f"{sys.executable} -m pip install -q 'imbalanced-learn>=0.12' 'pyarrow>=14' 'lightgbm>=4' 'scipy>=1.9'")
     raw = f"{args.work}/raw"
     link_raw_files(args.input, raw)
 
     py = sys.executable
     sh(f"{py} -m src.load --raw-dir {raw} --frac {args.frac}")
-    sh(f"{py} -m src.preprocess")
+    sh(f"{py} -m src.preprocess --drop-duplicates")
+    sh(f"{py} -m src.preprocess --out-dir data/processed_withdups")
     sh(f"{py} -m src.eda")
     pack(args.work, "EDA")
 
-    env = {**os.environ, "SEEDS": args.seeds, "PATH": os.path.dirname(py) + os.pathsep + os.environ["PATH"]}
+    env = {**os.environ, "SEEDS": args.seeds, "PATH": os.path.dirname(py) + os.pathsep + os.environ["PATH"],
+           "RUN_DEADLINE": str(start + args.hours * 3600)}
     for phase in args.phases:
         sh(f"bash scripts/run_experiments.sh {phase}", env=env)
         pack(args.work, phase)
 
-    for f in sorted(glob.glob("results/tables/*_summary.csv")) + sorted(glob.glob("results/tables/sweep_*.csv")):
+    tables = ["leaderboard_8c.csv", "duplicates_8c.csv"]
+    for f in [f"results/tables/{t}" for t in tables if os.path.exists(f"results/tables/{t}")] \
+            + sorted(glob.glob("results/tables/sweep_*.csv")):
         table = pd.read_csv(f)
-        cols = [c for c in ["strategy", "n_features", "seeds", "test_accuracy", "test_macro_f1", "test_minority_recall",
+        cols = [c for c in ["data", "model", "strategy", "n_features", "seeds", "test_accuracy", "test_macro_f1", "test_minority_recall",
                             "test_worst_class_recall", "predict_us_per_flow", "model_size_mb", "train_s"] if c in table]
         print(f"\n== {f}\n{table[cols].to_string(index=False, float_format='%.4f')}")
     print(f"\nDone in {(time.time() - start) / 3600:.1f} h. Download results.zip from the Output panel "

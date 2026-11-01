@@ -12,12 +12,22 @@ Outputs (per run_id):
     results/runs.csv                  one row per run: settings, metrics, costs
     results/per_class/<run_id>.csv    precision/recall/F1/support per class (val and test)
     results/confusion/<run_id>.csv    row-normalised test confusion matrix (+ .png)
+    results/predictions/<run_id>.npz  test labels and predictions, for significance tests
+
+Models: dt (Decision Tree), rf (Random Forest), lgbm (LightGBM, gradient
+boosting) and brf (Balanced Random Forest: every tree is trained on a
+class-balanced bootstrap sample, so it is an imbalance method in itself).
 
 A run whose run_id is already in runs.csv is skipped unless --force is given,
 so an interrupted batch (e.g. a Kaggle session timing out) can be resumed.
+If the environment variable RUN_DEADLINE (Unix time) has passed, new runs are
+skipped so a time-limited session can still save what it has.
 """
 
 import argparse
+import json
+import os
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -41,10 +51,20 @@ from src.feature_selection import load_ranking
 from src.labels import LEVELS, classes_for
 from src.plots import STRATEGY_NAMES, plot_confusion
 from src.preprocess import load_split
-from src.resample import DEFAULT_K_NEIGHBORS, DEFAULT_SMOTE_TARGET, DEFAULT_UNDERSAMPLE_CAP, STRATEGIES, resample
+from src.resample import (
+    DEFAULT_K_NEIGHBORS,
+    DEFAULT_SMOTE_TARGET,
+    DEFAULT_UNDERSAMPLE_CAP,
+    OVERSAMPLING,
+    STRATEGIES,
+    resample,
+)
+from src.stats import save_predictions
+from src.threshold import fit_thresholds
 
-MODELS = ("dt", "rf")
-MODEL_NAMES = {"dt": "Decision Tree", "rf": "Random Forest"}
+MODELS = ("dt", "rf", "lgbm", "brf")
+ENSEMBLES = ("rf", "lgbm", "brf")
+MODEL_NAMES = {"dt": "Decision Tree", "rf": "Random Forest", "lgbm": "LightGBM", "brf": "Balanced Random Forest"}
 DEFAULT_N_ESTIMATORS = 100
 
 
@@ -56,20 +76,32 @@ def build_model(name, class_weight=None, seed=42, n_estimators=DEFAULT_N_ESTIMAT
             n_estimators=n_estimators, class_weight=class_weight, max_depth=max_depth,
             n_jobs=n_jobs, random_state=seed,
         )
+    if name == "lgbm":
+        from lightgbm import LGBMClassifier
+        return LGBMClassifier(
+            n_estimators=n_estimators, num_leaves=63, learning_rate=0.1, class_weight=class_weight,
+            max_depth=max_depth or -1, n_jobs=n_jobs, random_state=seed, verbose=-1,
+        )
+    if name == "brf":
+        from imblearn.ensemble import BalancedRandomForestClassifier
+        return BalancedRandomForestClassifier(
+            n_estimators=n_estimators, sampling_strategy="all", replacement=True, bootstrap=False,
+            max_depth=max_depth, n_jobs=n_jobs, random_state=seed,
+        )
     raise ValueError(f"model must be one of {MODELS}, got {name!r}")
 
 
 def config_id(args, n_features):
     """Everything that identifies a configuration except the seed."""
     strategy = args.strategy
-    if args.strategy in ("smote", "hybrid"):
+    if args.strategy in OVERSAMPLING:
         strategy += str(args.smote_target)
         if args.strategy == "hybrid":
             strategy += f"-cap{args.undersample_cap}"
         if args.k_neighbors != DEFAULT_K_NEIGHBORS:
             strategy += f"-kn{args.k_neighbors}"
     model = args.model
-    if args.model == "rf" and args.n_estimators != DEFAULT_N_ESTIMATORS:
+    if args.model in ENSEMBLES and args.n_estimators != DEFAULT_N_ESTIMATORS:
         model += f"{args.n_estimators}"
     if args.max_depth:
         model += f"-d{args.max_depth}"
@@ -84,6 +116,12 @@ def already_done(results_dir, run_id):
 
 
 def run(args):
+    if args.model == "brf" and args.strategy not in ("none", "threshold"):
+        raise SystemExit("brf already balances every tree; use --strategy none or threshold")
+    deadline = os.environ.get("RUN_DEADLINE")
+    if deadline and time.time() > float(deadline):
+        print("RUN_DEADLINE has passed, skipping this run")
+        return None
     data = load_split(args.data_dir, args.level)
     X_train, y_train = data["train"]
     features = list(X_train.columns)
@@ -120,6 +158,12 @@ def run(args):
         args.seed, args.n_estimators, args.max_depth, args.n_jobs,
     )
     _, train_s = timed(model.fit, X_fit, y_fit)
+    tuned_weights = ""
+    if args.strategy == "threshold":
+        (model, weights), tune_s = timed(fit_thresholds, model, X_val, y_val)
+        tuned_weights = json.dumps(weights)
+        train_s += tune_s
+        print(f"tuned class weights: {tuned_weights}")
     y_pred_test, test_predict_s = timed(model.predict, X_test)
     y_pred_val = model.predict(X_val)
 
@@ -137,6 +181,8 @@ def run(args):
     pd.concat([val_classes.assign(split="val"), test_classes.assign(split="test")]).to_csv(
         results_dir / "per_class" / f"{run_id}.csv", index=False
     )
+    seen = set(y_test) | set(y_pred_test)
+    save_predictions(results_dir, run_id, y_test, y_pred_test, [c for c in classes if c in seen])
     cm = confusion_table(y_test, y_pred_test, classes)
     cm.to_csv(results_dir / "confusion" / f"{run_id}.csv")
     plot_confusion(
@@ -152,13 +198,13 @@ def run(args):
         "run_id": run_id, "config_id": cfg,
         "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "level": args.level, "model": args.model, "strategy": args.strategy,
-        "smote_target": args.smote_target if args.strategy in ("smote", "hybrid") else None,
+        "smote_target": args.smote_target if args.strategy in OVERSAMPLING else None,
         "undersample_cap": args.undersample_cap if args.strategy == "hybrid" else None,
-        "k_neighbors": args.k_neighbors if args.strategy in ("smote", "hybrid") else None,
+        "k_neighbors": args.k_neighbors if args.strategy in OVERSAMPLING else None,
         "n_features": len(features),
         "feature_ranking": Path(args.ranking).stem if args.k else "",
         "seed": args.seed, "tag": args.tag,
-        "n_estimators": args.n_estimators if args.model == "rf" else None, "max_depth": args.max_depth,
+        "n_estimators": args.n_estimators if args.model in ENSEMBLES else None, "max_depth": args.max_depth,
         "train_rows": len(y_train), "train_rows_resampled": len(y_fit), "test_rows": len(y_test),
         "minority_classes": ";".join(minority),
         **{f"test_{k}": v for k, v in test_metrics.items()},
@@ -171,6 +217,7 @@ def run(args):
         "test_predict_s": test_predict_s,
         "predict_us_per_flow": 1e6 * test_predict_s / len(y_test),
         "model_size_mb": model_size_mb(model), "tree_nodes": node_count(model),
+        "tuned_weights": tuned_weights,
     }
     append_run(results_dir, row)
 

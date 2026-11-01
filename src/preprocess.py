@@ -68,7 +68,9 @@ def main(argv=None):
     parser.add_argument("--test-size", type=float, default=0.2, help="share of all rows (default 0.2)")
     parser.add_argument("--val-size", type=float, default=0.1, help="share of the non-test rows (default 0.1)")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--drop-duplicates", action="store_true", help="drop exact duplicate rows before splitting")
+    parser.add_argument("--drop-duplicates", action="store_true",
+                        help="drop exact duplicate rows before splitting (recommended: copies of a test row "
+                             "inside the training data inflate the scores)")
     parser.add_argument("--min-class-rows", type=int, default=10)
     args = parser.parse_args(argv)
 
@@ -79,6 +81,12 @@ def main(argv=None):
     out_dir.mkdir(parents=True, exist_ok=True)
     for name, part in parts.items():
         part.to_parquet(out_dir / f"{name}.parquet", index=False)
+
+    # Exact copies of test rows inside the training split make scores look better than they are.
+    train_hashes = set(pd.util.hash_pandas_object(parts["train"], index=False))
+    test_in_train = pd.util.hash_pandas_object(parts["test"], index=False).isin(train_hashes)
+    report["test_rows_also_in_train"] = int(test_in_train.sum())
+    report["test_share_also_in_train"] = float(test_in_train.mean())
 
     rows_per_category = pd.DataFrame(
         {name: to_level(part[LABEL_COL].astype(str), 8).value_counts() for name, part in parts.items()}
