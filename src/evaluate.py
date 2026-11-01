@@ -68,6 +68,9 @@ def model_size_mb(model):
 
 
 def node_count(model):
+    model = getattr(model, "model", model)  # unwrap a ThresholdedClassifier
+    if hasattr(model, "booster_"):  # LightGBM: a tree with L leaves has 2L - 1 nodes
+        return int(sum(2 * t["num_leaves"] - 1 for t in model.booster_.dump_model()["tree_info"]))
     trees = getattr(model, "estimators_", [model])
     return int(sum(t.tree_.node_count for t in trees))
 
@@ -94,10 +97,12 @@ def load_runs(results_dir):
     runs = pd.read_csv(path)
     runs["tag"] = runs["tag"].fillna("")
     runs["feature_ranking"] = runs["feature_ranking"].fillna("")
+    if "tuned_weights" not in runs:  # results from before threshold tuning existed
+        runs["tuned_weights"] = ""
     return runs
 
 
 def mean_std(df, by, cols):
     """Mean and standard deviation over seeds (std is 0 for a single seed)."""
     grouped = df.groupby(by, sort=False)[cols]
-    return grouped.mean().join(grouped.std(ddof=0).fillna(0.0), rsuffix="_std").reset_index()
+    return grouped.mean().join(grouped.std(ddof=0).fillna(0.0).add_suffix("_std")).reset_index()

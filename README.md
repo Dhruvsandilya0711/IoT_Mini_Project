@@ -9,8 +9,8 @@ CICIoT2023 contains IoT network traffic from 105 devices under 33 attacks in 7 c
 
 | Part | What | Main output |
 |------|------|-------------|
-| **Reproduction** | Neto et al.'s ML benchmark with Random Forest (plus Decision Tree as a lightweight baseline) on the 34-, 8- and 2-class tasks | Baseline per-class recall/F1, compared against the paper |
-| **Improvement** | Rebalance the *training set only*: SMOTE, SMOTE + undersampling, and class weights for comparison | Before/after per-class tables and recall-gain charts |
+| **Reproduction** | Neto et al.'s ML benchmark with Random Forest, plus Decision Tree, LightGBM and Balanced Random Forest, on the 34-, 8- and 2-class tasks | Baseline per-class recall/F1, compared against the paper |
+| **Improvement** | Fix the imbalance using the *training set only*: SMOTE, Borderline-SMOTE, SMOTE + undersampling, class weights, and decision-threshold tuning on the validation split | Before/after per-class tables, recall-gain charts, bootstrap confidence intervals and McNemar tests against the baseline |
 | **Extension** | Feature selection (mutual information, RF importance, RFE) to shrink the 46 features for resource-constrained IoT gateways | Performance and cost (latency, model size) against the number of features |
 
 Plan and deadlines: [`docs/TIMELINE.md`](docs/TIMELINE.md) · Course brief: [`docs/Mini-Projects.pdf`](docs/Mini-Projects.pdf)
@@ -23,10 +23,12 @@ src/
   load.py               stream raw CSVs, keep a random fraction of rows (class ratios preserved)
   preprocess.py         clean NaN/inf, frozen stratified train/val/test split
   eda.py                class imbalance, data quality, correlations
-  resample.py           none | smote | hybrid | classweight (training data only)
-  train.py              train + evaluate one configuration, append to results/runs.csv
+  resample.py           none | smote | hybrid | classweight | borderline | threshold (training data only)
+  threshold.py          per-class decision weights tuned on the validation split
+  train.py              train + evaluate one configuration (dt | rf | lgbm | brf), append to results/runs.csv
   feature_selection.py  rank features on the training split (mi | rf | rfe)
   evaluate.py           metrics, per-class tables, latency, model size
+  stats.py              bootstrap confidence intervals and McNemar tests on saved predictions
   analyze.py            aggregate runs over seeds into report tables and figures
   plots.py              figure styling
 scripts/run_experiments.sh   the full experiment matrix, phase by phase
@@ -69,8 +71,10 @@ Single runs, for exploring:
 python -m src.train --level 8 --model rf --strategy smote --smote-target 50000 --seed 0
 python -m src.feature_selection --level 8 --method mi
 python -m src.train --level 8 --model rf --strategy smote --k 15 --ranking results/features/ranking_mi_8class.csv
-python -m src.analyze compare --level 8 --model rf
+python -m src.analyze compare --level 8 --model rf        # incl. significance vs baseline
+python -m src.analyze leaderboard --level 8               # every model x strategy
 python -m src.analyze sweep --level 8 --model rf --strategy smote --ranking ranking_mi_8class
+python -m src.analyze duplicates --level 8                # scores with vs without duplicate rows
 ```
 
 Every command has `--help`. Runs already in `results/runs.csv` are skipped (use `--force` to redo one), so a batch can be resumed after an interruption.
@@ -99,6 +103,10 @@ Kaggle sessions are temporary: download `results/` (or commit it) at the end of 
 | `results/runs.csv` | One row per run: settings, test and validation metrics, minority-class recall, training time, prediction latency (µs per flow), model size, tree nodes |
 | `results/per_class/<run_id>.csv` | Precision, recall, F1 and support per class (validation and test) |
 | `results/confusion/<run_id>.{csv,png}` | Row-normalised test confusion matrix |
+| `results/predictions/<run_id>.npz` | Test labels and predictions, used for the significance tests |
+| `results/tables/compare_*_significance.csv` | Each strategy vs the baseline: change in macro-F1 and minority recall with 95% bootstrap CIs, McNemar p-value |
+| `results/tables/leaderboard_*.csv`, `results/figures/leaderboard_*.png` | Every model x strategy, ranked by macro-F1 |
+| `results/tables/duplicates_8c.csv` | Baseline scores on data with and without exact duplicate rows |
 | `results/tables/compare_*.csv`, `results/figures/compare_*.png` | Baseline vs rebalancing, mean ± std over seeds |
 | `results/tables/sweep_*.csv`, `results/figures/sweep_*.png` | Performance and cost against the number of features |
 | `results/features/ranking_*.csv` | Feature rankings |
@@ -108,12 +116,16 @@ Kaggle sessions are temporary: download `results/` (or commit it) at the end of 
 
 ## Methodology guard-rails
 
-1. The test set is split off first (stratified on all 34 classes) and never resampled or used to choose anything.
+1. Exact duplicate rows are removed before splitting, so no test row has a copy in the training data (the `duplicates` phase measures how much such copies inflate scores). The test set is split off first (stratified on all 34 classes) and never resampled or used to choose anything.
 2. Scaling, SMOTE, undersampling and feature ranking are fit on the training split only; settings such as k are chosen on the validation split.
 3. SMOTE raises minority classes to a fixed target (default 50,000 rows) rather than to the size of DDoS, which would not fit in memory.
 4. Headline metrics are macro-F1 and per-class recall. Accuracy alone is misleading here because DDoS and DoS dominate.
+5. Every claimed improvement is checked against the baseline trained with the same seed, on the same test rows (paired bootstrap and McNemar test).
 
 ## References
 
 - E. C. P. Neto, S. Dadkhah, R. Ferreira, A. Zohourian, R. Lu, A. A. Ghorbani, "CICIoT2023: A Real-Time Dataset and Benchmark for Large-Scale Attacks in IoT Environment," *Sensors*, 23(13):5941, 2023.
 - N. V. Chawla, K. W. Bowyer, L. O. Hall, W. P. Kegelmeyer, "SMOTE: Synthetic Minority Over-sampling Technique," *Journal of Artificial Intelligence Research*, 16:321–357, 2002.
+- H. Han, W.-Y. Wang, B.-H. Mao, "Borderline-SMOTE: A New Over-Sampling Method in Imbalanced Data Sets Learning," *ICIC*, LNCS 3644, pp. 878–887, 2005.
+- C. Chen, A. Liaw, L. Breiman, "Using Random Forest to Learn Imbalanced Data," Tech. Rep. 666, UC Berkeley, 2004.
+- G. Ke et al., "LightGBM: A Highly Efficient Gradient Boosting Decision Tree," *NeurIPS*, 2017.

@@ -13,6 +13,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
 
 SURFACE = "#fcfcfb"
@@ -23,12 +24,15 @@ GRID = "#e1e0d9"
 AXIS = "#c3c2b7"
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
 
-STRATEGY_COLORS = {"none": SERIES[0], "smote": SERIES[1], "hybrid": SERIES[2], "classweight": SERIES[3]}
+STRATEGY_COLORS = {"none": SERIES[0], "smote": SERIES[1], "hybrid": SERIES[2], "classweight": SERIES[3],
+                   "borderline": SERIES[4], "threshold": SERIES[5]}
 STRATEGY_NAMES = {
     "none": "Baseline (no rebalancing)",
     "smote": "SMOTE",
     "hybrid": "SMOTE + undersampling",
     "classweight": "Class weights",
+    "borderline": "Borderline-SMOTE",
+    "threshold": "Threshold tuning",
 }
 
 SEQUENTIAL = LinearSegmentedColormap.from_list(
@@ -131,14 +135,20 @@ def plot_grouped_bars(table, value, path, title, ylabel, ylim=None, classes=None
     fig, ax = plt.subplots(figsize=(max(6.5, 0.22 * n_c * n_s + 1.5), 3.6))
     slot = 0.8 / n_s
     x = np.arange(n_c)
-    for i, strategy in enumerate(strategies):
-        rows = table[table["strategy"] == strategy].set_index("class").reindex(classes)
-        offsets = x - 0.4 + slot * (i + 0.5)
-        ax.bar(offsets, rows[value], width=slot * 0.88, color=STRATEGY_COLORS[strategy],
-               label=STRATEGY_NAMES[strategy])
-        std = rows.get(f"{value}_std")
-        if std is not None and (std.fillna(0) > 0).any():
-            ax.errorbar(offsets, rows[value], yerr=std, fmt="none", ecolor=INK_2, elinewidth=0.8, capsize=0)
+    values = table.set_index(["class", "strategy"])
+    has_std = f"{value}_std" in table and (table[f"{value}_std"].fillna(0) > 0).any()
+    for ci, cls in enumerate(classes):
+        # Centre each group on the strategies it actually has (e.g. one bar for Balanced Random Forest).
+        present = [s for s in strategies if (cls, s) in values.index and pd.notna(values.loc[(cls, s), value])]
+        for i, strategy in enumerate(present):
+            row = values.loc[(cls, strategy)]
+            pos = x[ci] - slot * len(present) / 2 + slot * (i + 0.5)
+            ax.bar(pos, row[value], width=slot * 0.88, color=STRATEGY_COLORS[strategy])
+            if has_std and row.get(f"{value}_std", 0) > 0:
+                ax.errorbar(pos, row[value], yerr=row[f"{value}_std"], fmt="none", ecolor=INK_2, elinewidth=0.8,
+                            capsize=0)
+    for strategy in strategies:
+        ax.bar(0, 0, width=0, color=STRATEGY_COLORS[strategy], label=STRATEGY_NAMES[strategy])
     ax.axhline(0, color=AXIS, linewidth=0.8)
     ax.set_xticks(x, classes, rotation=0 if n_c <= 10 else 60, ha="center" if n_c <= 10 else "right")
     ax.tick_params(axis="x", length=0)
@@ -148,8 +158,9 @@ def plot_grouped_bars(table, value, path, title, ylabel, ylim=None, classes=None
     if ylim:
         ax.set_ylim(*ylim)
     ax.set_ylabel(ylabel)
-    ax.set_title(title, pad=24)
-    ax.legend(loc="lower left", bbox_to_anchor=(0, 1.0), ncol=n_s, fontsize=8, handlelength=1, borderaxespad=0.2)
+    ncol = n_s if n_s <= 4 else 3
+    ax.set_title(title, pad=24 if n_s <= ncol else 40)
+    ax.legend(loc="lower left", bbox_to_anchor=(0, 1.0), ncol=ncol, fontsize=8, handlelength=1, borderaxespad=0.2)
     _save(fig, path)
 
 

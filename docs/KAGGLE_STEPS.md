@@ -1,6 +1,6 @@
 # Running the experiments on Kaggle
 
-Everything runs from three lines pasted into one notebook cell. Expect **about 3–4 hours** of run time; you can close the browser while it runs.
+Everything runs from three lines pasted into one notebook cell (or import `notebooks/ciciot2023_kaggle.ipynb`). Expect **about 7–10 hours** of run time; you can close the browser while it runs. The script stops starting new runs after 11 hours, so it always finishes within Kaggle's 12-hour limit with `results.zip` saved.
 
 ## One-time setup
 
@@ -33,4 +33,5 @@ Everything runs from three lines pasted into one notebook cell. Expect **about 3
 - **"No CICIoT2023 files found"**: the dataset wasn't added (step 2), or it isn't the CSV version.
 - **The clone fails**: Internet is off (step 3) or your phone isn't verified.
 - **It runs out of time**: `results.zip` is updated after every phase, so download it anyway and upload it.
-- **Want it faster**: change the last line to `!python scripts/kaggle_run.py --frac 0.02 --seeds "0 1"`.
+- **Want it faster**: change the last line to `!python scripts/kaggle_run.py --frac 0.02 --seeds "0 1"` (roughly half the time).
+- **Running it a second time** (e.g. after the code was updated): use **Save Version** again on the same notebook. It always downloads the latest code.
