@@ -75,7 +75,11 @@ python -m src.analyze sweep --level 8 --model rf --strategy smote --ranking rank
 
 Every command has `--help`. Runs already in `results/runs.csv` are skipped (use `--force` to redo one), so a batch can be resumed after an interruption.
 
-### On Kaggle or Colab
+### On Kaggle (recommended)
+
+Step-by-step guide: [`docs/KAGGLE_STEPS.md`](docs/KAGGLE_STEPS.md). The notebook [`notebooks/ciciot2023_kaggle.ipynb`](notebooks/ciciot2023_kaggle.ipynb) runs every phase and packs the results into `results.zip`.
+
+### By hand on Kaggle or Colab
 
 ```python
 !git clone https://github.com/Dhruvsandilya0711/IoT_Mini_Project.git
