@@ -77,7 +77,7 @@ Every command has `--help`. Runs already in `results/runs.csv` are skipped (use 
 
 ### On Kaggle (recommended)
 
-Step-by-step guide: [`docs/KAGGLE_STEPS.md`](docs/KAGGLE_STEPS.md). The notebook [`notebooks/ciciot2023_kaggle.ipynb`](notebooks/ciciot2023_kaggle.ipynb) runs every phase and packs the results into `results.zip`.
+Step-by-step guide: [`docs/KAGGLE_STEPS.md`](docs/KAGGLE_STEPS.md). In a Kaggle notebook cell, `!python scripts/kaggle_run.py` (after cloning the repo) runs every phase and packs the results into `results.zip`.
 
 ### By hand on Kaggle or Colab
 
