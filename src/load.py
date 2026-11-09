@@ -10,6 +10,7 @@ file, where per-file rounding would drop them entirely.
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -36,6 +37,10 @@ def find_raw_files(raw_dir):
     return files
 
 
+def _squash(name):
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
 def _label_column(columns):
     matches = [c for c in columns if c.strip().lower() == LABEL_COL]
     if len(matches) != 1:
@@ -60,6 +65,10 @@ def read_part(path):
             df = pd.read_csv(path, low_memory=False)
     df.columns = df.columns.str.strip()
     df = df.rename(columns={_label_column(df.columns): LABEL_COL})
+    # Some copies rename the features (e.g. 'protocol_type' for 'Protocol Type'): map them back.
+    standard = {_squash(c): c for c in EXPECTED_FEATURES}
+    df = df.rename(columns={c: standard[_squash(c)] for c in df.columns
+                            if _squash(c) in standard and c not in EXPECTED_FEATURES})
 
     if set(EXPECTED_FEATURES) <= set(df.columns):
         extra = [c for c in df.columns if c not in EXPECTED_FEATURES and c != LABEL_COL]
@@ -71,12 +80,21 @@ def read_part(path):
         df = df.drop(columns=index_like)
 
     features = list(df.columns.drop(LABEL_COL))
-    text_values = {}
+    text_values, text_columns = {}, []
     for c in features:
         if not pd.api.types.is_numeric_dtype(df[c]):
             numeric = pd.to_numeric(df[c], errors="coerce")
-            text_values[c] = df[c][numeric.isna() & df[c].notna()].astype(str).unique()[:3].tolist()
+            is_text = numeric.isna() & df[c].notna()
+            if is_text.sum() > 0.5 * df[c].notna().sum():  # a text column, not stray text: drop it
+                text_columns.append(c)
+                continue
+            text_values[c] = df[c][is_text].astype(str).unique()[:3].tolist()
             df[c] = numeric
+    if text_columns:
+        print(f"Note: {path.name}: dropping text columns {text_columns} "
+              f"(e.g. {df[text_columns[0]].dropna().astype(str).unique()[:3].tolist()})")
+        df = df.drop(columns=text_columns)
+        features = [c for c in features if c not in text_columns]
     if text_values:
         examples = "; ".join(f"{c}: {v}" for c, v in list(text_values.items())[:3])
         print(f"Note: {path.name}: text found in {len(text_values)} numeric columns ({examples}"

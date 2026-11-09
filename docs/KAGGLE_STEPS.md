@@ -32,7 +32,7 @@ Everything runs from three lines pasted into one notebook cell (or import `noteb
 - **`NameError: name 'null' is not defined`**: the notebook file's text was pasted into a cell. Use the three lines above instead.
 - **It stops within the first few minutes**: open the version's **Logs**, copy the last ~30 lines and paste them into the chat.
 - **"No CICIoT2023 files found"**: the dataset wasn't added (step 2), or it isn't the CSV version.
-- **`Unknown CICIoT2023 labels`**: the input isn't the original dataset (someone renamed the classes). Use the original CSV release (step 2).
+- **The log says `Using 1 files` or `does not look like the full CICIoT2023 CSV release`**: the input is a notebook's output (a re-shared sample), not the dataset itself. The run still works on it, but with less data. Adding another user's *notebook* as input gives you that notebook's output files, not the dataset it read; to get the 169 files, add the *dataset* (Datasets filter).
 - **Reusing a notebook where the clone already ran**: put `!rm -rf /kaggle/working/IoT_Mini_Project` as the first line, or the clone fails because the folder exists.
 - **The clone fails**: Internet is off (step 3) or your phone isn't verified.
 - **It runs out of time**: `results.zip` is updated after every phase, so download it anyway and upload it.

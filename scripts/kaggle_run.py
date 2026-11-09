@@ -6,7 +6,8 @@ Paste into ONE code cell of a new Kaggle notebook (with the CICIoT2023 dataset a
     %cd IoT_Mini_Project
     !python scripts/kaggle_run.py
 
-Options: --frac 0.03 (share of rows sampled), --seeds "0 1 2", --hours 11 (time budget),
+Options: --rows 1400000 (rows to sample; about 3% of the full dataset), --frac (fixed share instead),
+--seeds "0 1 2", --hours 11 (time budget),
 --phases (default: baseline improvement extension duplicates), --input /kaggle/input, --work /kaggle/working.
 
 Exact duplicate rows are removed before the main split (copies of test rows inside the training data
@@ -20,6 +21,7 @@ Kaggle session (12 h limit) always ends with usable results.
 import argparse
 import glob
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -49,19 +51,55 @@ def link_raw_files(input_dir, raw_dir):
     """Symlink the folder with the most labelled CICIoT2023 files, so merged copies elsewhere aren't read twice."""
     files = [p for p in glob.glob(f"{input_dir}/**/*", recursive=True)
              if p.lower().endswith((".csv", ".parquet")) and "IoT_Mini_Project" not in p]
+    print("Inputs found (folder: data files, size):")
+    sizes = Counter()
+    for p in files:
+        sizes[os.path.dirname(p)] += os.path.getsize(p)
+    for folder, n in Counter(os.path.dirname(p) for p in files).most_common(10):
+        print(f"  {folder}: {n} files, {sizes[folder] / 1e9:.1f} GB")
     data_files = [p for p in files if has_label(p)]
+    unlabelled = sorted(set(files) - set(data_files))
+    if unlabelled:
+        print(f"  ({len(unlabelled)} files have no 'label' column, e.g. {unlabelled[0]})")
     by_dir = Counter(os.path.dirname(p) for p in data_files)
     print("Folders with labelled CICIoT2023 files:", by_dir.most_common(5))
     if not by_dir:
         sys.exit("No CICIoT2023 files found. Add the dataset with 'Add Input' (search CICIoT2023).")
     source = by_dir.most_common(1)[0][0]
     chosen = sorted(p for p in data_files if os.path.dirname(p) == source)
+
+    # Some re-shared copies hold the same data several times: per label granularity
+    # (..._34classes / _8classes / _2classes) and per sample size (0.001percent_..., 0.01percent_...).
+    names = [os.path.basename(p) for p in chosen]
+    fine = [p for p, n in zip(chosen, names) if re.search(r"34[ _-]?class", n, re.I)]
+    if fine and len(fine) < len(chosen):
+        print("This input has copies at several label granularities: using the 34-class files only")
+        chosen = fine
+    if len(chosen) > 1 and all(re.search(r"percent|frac|sample", os.path.basename(p), re.I) for p in chosen):
+        chosen = [max(chosen, key=os.path.getsize)]
+        print(f"These are samples of different sizes of the same data: using the largest, {os.path.basename(chosen[0])}")
+    if len(chosen) < 20:
+        print("NOTE: this does not look like the full CICIoT2023 CSV release (169 files, ~13 GB); "
+              "results will rest on less data, especially for the rarest classes.")
+
     shutil.rmtree(raw_dir, ignore_errors=True)
     os.makedirs(raw_dir)
     for p in chosen:
         os.symlink(p, os.path.join(raw_dir, os.path.basename(p)))
     size_gb = sum(os.path.getsize(p) for p in chosen) / 1e9
     print(f"Using {len(chosen)} files ({size_gb:.1f} GB) from {source}")
+    return chosen
+
+
+def count_rows(paths):
+    total = 0
+    for p in paths:
+        if p.endswith(".parquet"):
+            total += pq.ParquetFile(p).metadata.num_rows
+        else:
+            with open(p, "rb") as f:
+                total += sum(chunk.count(b"\n") for chunk in iter(lambda: f.read(1 << 24), b"")) - 1
+    return total
 
 
 def pack(work, note):
@@ -75,7 +113,8 @@ def pack(work, note):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--frac", type=float, default=0.03)
+    parser.add_argument("--rows", type=int, default=1_400_000, help="rows to sample (about 3%% of the full dataset)")
+    parser.add_argument("--frac", type=float, help="sample this share of rows instead of --rows")
     parser.add_argument("--seeds", default="0 1 2")
     parser.add_argument("--input", default="/kaggle/input")
     parser.add_argument("--work", default="/kaggle/working")
@@ -87,10 +126,15 @@ def main():
     start = time.time()
     sh(f"{sys.executable} -m pip install -q 'imbalanced-learn>=0.12' 'pyarrow>=14' 'lightgbm>=4' 'scipy>=1.9'")
     raw = f"{args.work}/raw"
-    link_raw_files(args.input, raw)
+    chosen = link_raw_files(args.input, raw)
+    frac = args.frac
+    if frac is None:
+        total = count_rows(chosen)
+        frac = min(1.0, args.rows / total)
+        print(f"{total:,} rows in the input: sampling {frac:.4f} of them (about {min(total, args.rows):,} rows)")
 
     py = sys.executable
-    sh(f"{py} -m src.load --raw-dir {raw} --frac {args.frac}")
+    sh(f"{py} -m src.load --raw-dir {raw} --frac {frac:.6f}")
     sh(f"{py} -m src.preprocess --drop-duplicates")
     sh(f"{py} -m src.preprocess --out-dir data/processed_withdups")
     sh(f"{py} -m src.eda")
