@@ -2,10 +2,12 @@
 
 Paste into ONE code cell of a new Kaggle notebook (with the CICIoT2023 dataset added and Internet on):
 
-    %cd /kaggle/working
-    !rm -rf IoT_Mini_Project
-    !git clone -q --depth 1 -b main https://github.com/Dhruvsandilya0711/IoT_Mini_Project.git
-    %cd /kaggle/working/IoT_Mini_Project
+    import os, shutil, subprocess
+    os.chdir("/kaggle/working")
+    shutil.rmtree("/kaggle/working/IoT_Mini_Project", ignore_errors=True)
+    subprocess.run(["git", "clone", "-q", "--depth", "1", "-b", "main",
+                    "https://github.com/Dhruvsandilya0711/IoT_Mini_Project.git", "/kaggle/working/IoT_Mini_Project"], check=True)
+    os.chdir("/kaggle/working/IoT_Mini_Project")
     !python scripts/kaggle_run.py
 
 Options: --rows 1400000 (rows to sample; about 3% of the full dataset), --frac (fixed share instead),

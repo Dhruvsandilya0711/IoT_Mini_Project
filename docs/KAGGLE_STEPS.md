@@ -17,14 +17,17 @@ Everything runs from a few lines pasted into one notebook cell (or import `noteb
 4. Delete anything in the first code cell and paste exactly these lines:
 
    ```
-   %cd /kaggle/working
-   !rm -rf IoT_Mini_Project
-   !git clone -q --depth 1 -b main https://github.com/Dhruvsandilya0711/IoT_Mini_Project.git
-   %cd /kaggle/working/IoT_Mini_Project
+   import os, shutil, subprocess
+   os.chdir("/kaggle/working")
+   shutil.rmtree("/kaggle/working/IoT_Mini_Project", ignore_errors=True)
+   subprocess.run(["git", "clone", "-q", "--depth", "1", "-b", "main",
+                   "https://github.com/Dhruvsandilya0711/IoT_Mini_Project.git", "/kaggle/working/IoT_Mini_Project"], check=True)
+   os.chdir("/kaggle/working/IoT_Mini_Project")
    !python scripts/kaggle_run.py
    ```
 
-   The first two lines make the cell safe to run again in the same session (they remove an earlier copy).
+   It is safe to run again in the same session: it moves to `/kaggle/working` and removes an earlier copy first.
+   If an old error keeps showing, restart the session (**Run → Restart & clear cell outputs**) and run it again.
 
 5. Click **Save Version** (top right) → **Save & Run All (Commit)** → **Save**. It runs in the background; you can close the tab.
 6. Check progress: your profile → **Code** → open the notebook → the version shows *Running*, then *Complete*.
