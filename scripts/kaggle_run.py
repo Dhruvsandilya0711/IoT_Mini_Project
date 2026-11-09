@@ -20,6 +20,7 @@ Kaggle session (12 h limit) always ends with usable results.
 
 import argparse
 import glob
+import gzip
 import os
 import re
 import shutil
@@ -39,32 +40,49 @@ def sh(cmd, env=None):
         sys.exit(f"Command failed ({result.returncode}): {cmd}")
 
 
+DATA_EXTENSIONS = (".csv", ".csv.gz", ".parquet")
+
+
 def has_label(path):
     try:
-        cols = pd.read_csv(path, nrows=0).columns if path.endswith(".csv") else pq.read_schema(path).names
+        cols = pq.read_schema(path).names if path.endswith(".parquet") else pd.read_csv(path, nrows=0).columns
         return any(c.strip().lower() == "label" for c in cols)
     except Exception:
         return False
 
 
+def list_files(input_dir):
+    """Every file under input_dir, following symlinked folders (Kaggle mounts inputs that way)."""
+    out = []
+    for root, _, names in os.walk(input_dir, followlinks=True):
+        out += [os.path.join(root, n) for n in names]
+    return out
+
+
+def describe_inputs(input_dir, all_files):
+    print(f"Everything under {input_dir}:")
+    if not os.path.exists(input_dir):
+        print("  (the folder does not exist)")
+        return
+    by_folder = Counter(os.path.dirname(p) for p in all_files)
+    if not by_folder:
+        print("  (no files at all: no input is attached to this run)")
+    for folder, n in by_folder.most_common(12):
+        names = sorted(os.path.basename(p) for p in all_files if os.path.dirname(p) == folder)
+        size = sum(os.path.getsize(p) for p in all_files if os.path.dirname(p) == folder) / 1e9
+        print(f"  {folder}: {n} files, {size:.1f} GB, e.g. {names[:3]}")
+
+
 def link_raw_files(input_dir, raw_dir):
     """Symlink the folder with the most labelled CICIoT2023 files, so merged copies elsewhere aren't read twice."""
-    files = [p for p in glob.glob(f"{input_dir}/**/*", recursive=True)
-             if p.lower().endswith((".csv", ".parquet")) and "IoT_Mini_Project" not in p]
-    print("Inputs found (folder: data files, size):")
-    sizes = Counter()
-    for p in files:
-        sizes[os.path.dirname(p)] += os.path.getsize(p)
-    for folder, n in Counter(os.path.dirname(p) for p in files).most_common(10):
-        print(f"  {folder}: {n} files, {sizes[folder] / 1e9:.1f} GB")
-    data_files = [p for p in files if has_label(p)]
-    unlabelled = sorted(set(files) - set(data_files))
-    if unlabelled:
-        print(f"  ({len(unlabelled)} files have no 'label' column, e.g. {unlabelled[0]})")
+    all_files = [p for p in list_files(input_dir) if "IoT_Mini_Project" not in p]
+    describe_inputs(input_dir, all_files)
+    data_files = [p for p in all_files if p.lower().endswith(DATA_EXTENSIONS) and has_label(p)]
     by_dir = Counter(os.path.dirname(p) for p in data_files)
     print("Folders with labelled CICIoT2023 files:", by_dir.most_common(5))
     if not by_dir:
-        sys.exit("No CICIoT2023 files found. Add the dataset with 'Add Input' (search CICIoT2023).")
+        sys.exit("No CICIoT2023 files found (CSV or Parquet files with a 'label' column). "
+                 "Check the notebook's Input panel: add the dataset with '+ Add Input' (search CICIoT2023).")
     source = by_dir.most_common(1)[0][0]
     chosen = sorted(p for p in data_files if os.path.dirname(p) == source)
 
@@ -97,7 +115,7 @@ def count_rows(paths):
         if p.endswith(".parquet"):
             total += pq.ParquetFile(p).metadata.num_rows
         else:
-            with open(p, "rb") as f:
+            with (gzip.open(p, "rb") if p.endswith(".gz") else open(p, "rb")) as f:
                 total += sum(chunk.count(b"\n") for chunk in iter(lambda: f.read(1 << 24), b"")) - 1
     return total
 

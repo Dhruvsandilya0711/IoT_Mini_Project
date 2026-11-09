@@ -31,9 +31,9 @@ EXPECTED_FEATURES = [
 
 
 def find_raw_files(raw_dir):
-    files = sorted(p for p in Path(raw_dir).rglob("*") if p.suffix.lower() in {".csv", ".parquet"})
+    files = sorted(p for p in Path(raw_dir).rglob("*") if p.name.lower().endswith((".csv", ".csv.gz", ".parquet")))
     if not files:
-        raise FileNotFoundError(f"No .csv or .parquet files under {raw_dir}")
+        raise FileNotFoundError(f"No .csv, .csv.gz or .parquet files under {raw_dir}")
     return files
 
 
