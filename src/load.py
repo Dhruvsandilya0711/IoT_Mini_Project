@@ -44,19 +44,51 @@ def _label_column(columns):
 
 
 def read_part(path):
-    """Read one raw file with float32 features and a canonical 'label' column."""
+    """Read one raw file with float32 features and a canonical 'label' column.
+
+    Copies of the dataset re-shared by other users are not always clean: header lines repeated
+    inside the file, an index column, extra text columns. Those are dropped here, with a note.
+    """
     if path.suffix.lower() == ".parquet":
         df = pd.read_parquet(path)
     else:
         header = pd.read_csv(path, nrows=0).columns
         label = _label_column(header)
-        df = pd.read_csv(path, dtype={c: "float32" for c in header if c != label})
+        try:  # fast path for the original files, where every feature is numeric
+            df = pd.read_csv(path, dtype={c: "float32" for c in header if c != label})
+        except (ValueError, TypeError):
+            df = pd.read_csv(path, low_memory=False)
     df.columns = df.columns.str.strip()
     df = df.rename(columns={_label_column(df.columns): LABEL_COL})
-    features = df.columns.drop(LABEL_COL)
-    df[features] = df[features].astype("float32")
+
+    if set(EXPECTED_FEATURES) <= set(df.columns):
+        extra = [c for c in df.columns if c not in EXPECTED_FEATURES and c != LABEL_COL]
+        if extra:
+            print(f"Note: {path.name}: ignoring columns that are not CICIoT2023 features: {extra}")
+        df = df[EXPECTED_FEATURES + [LABEL_COL]]
+    else:
+        index_like = [c for c in df.columns if c.lower().startswith("unnamed") or c.lower() in ("index", "id")]
+        df = df.drop(columns=index_like)
+
+    features = list(df.columns.drop(LABEL_COL))
+    text_values = {}
+    for c in features:
+        if not pd.api.types.is_numeric_dtype(df[c]):
+            numeric = pd.to_numeric(df[c], errors="coerce")
+            text_values[c] = df[c][numeric.isna() & df[c].notna()].astype(str).unique()[:3].tolist()
+            df[c] = numeric
+    if text_values:
+        examples = "; ".join(f"{c}: {v}" for c, v in list(text_values.items())[:3])
+        print(f"Note: {path.name}: text found in {len(text_values)} numeric columns ({examples}"
+              f"{'; ...' if len(text_values) > 3 else ''}); it is treated as missing")
+    empty = df[features].isna().all(axis=1) | df[LABEL_COL].isna() \
+        | df[LABEL_COL].astype(str).str.strip().str.lower().eq(LABEL_COL)
+    if empty.any():
+        print(f"Note: {path.name}: dropped {int(empty.sum()):,} rows with no numeric values (e.g. repeated headers)")
+        df = df[~empty]
+    df = df.astype({c: "float32" for c in features})
     df[LABEL_COL] = canonical(df[LABEL_COL])
-    return df
+    return df.reset_index(drop=True)
 
 
 def build_sample(raw_dir, frac, seed=42, keep_all=(), max_files=None):

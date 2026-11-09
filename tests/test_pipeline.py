@@ -22,6 +22,22 @@ def test_label_mapping_covers_all_classes():
         canonical(pd.Series(["NotAnAttack"]))
 
 
+def test_loader_cleans_messy_copies(tmp_path):
+    raw = write_fake_raw(tmp_path / "raw", n_files=1, rows_per_file=300)
+    path = raw / "part-00000.csv"
+    df = pd.read_csv(path)
+    df.insert(0, "Unnamed: 0", range(len(df)))  # index column written by to_csv
+    df["note"] = "x"  # an extra text column
+    df["Rate"] = df["Rate"].astype(object)
+    df.loc[5, "Rate"] = "oops"  # a stray text value in a numeric column
+    header = pd.DataFrame([df.columns], columns=df.columns)  # header line repeated mid-file
+    pd.concat([df.iloc[:100], header, df.iloc[100:]]).to_csv(path, index=False)
+    part = load.read_part(path)
+    assert list(part.columns) == load.EXPECTED_FEATURES + ["label"]
+    assert len(part) == 300 and part["Rate"].isna().sum() == 1
+    assert all(str(t) == "float32" for t in part.dtypes.iloc[:-1])
+
+
 def test_resample_strategies():
     y = pd.Series(["big"] * 300 + ["mid"] * 60 + ["small"] * 12)
     X = pd.DataFrame({"a": range(len(y)), "b": range(len(y))}, dtype="float32")
