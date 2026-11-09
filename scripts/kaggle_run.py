@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from collections import Counter
 
@@ -143,7 +144,8 @@ def main():
     os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     start = time.time()
     sh(f"{sys.executable} -m pip install -q 'imbalanced-learn>=0.12' 'pyarrow>=14' 'lightgbm>=4' 'scipy>=1.9'")
-    raw = f"{args.work}/raw"
+    # Links to the input files live outside the output folder, so Kaggle never copies the dataset into the output.
+    raw = os.path.join(tempfile.gettempdir(), "ciciot2023_raw")
     chosen = link_raw_files(args.input, raw)
     frac = args.frac
     if frac is None:
@@ -171,6 +173,9 @@ def main():
         cols = [c for c in ["data", "model", "strategy", "n_features", "seeds", "test_accuracy", "test_macro_f1", "test_minority_recall",
                             "test_worst_class_recall", "predict_us_per_flow", "model_size_mb", "train_s"] if c in table]
         print(f"\n== {f}\n{table[cols].to_string(index=False, float_format='%.4f')}")
+    # The sampled data is not needed any more (results.zip has everything) and would bloat Kaggle's output.
+    for folder in glob.glob("data/processed*"):
+        shutil.rmtree(folder, ignore_errors=True)
     print(f"\nDone in {(time.time() - start) / 3600:.1f} h. Download results.zip from the Output panel "
           "and unzip it into the repository's results/ folder.")
 

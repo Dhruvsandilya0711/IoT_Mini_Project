@@ -11,7 +11,7 @@ Nothing in this folder is committed except this file.
 ## Getting CICIoT2023
 
 - **Official:** the CIC dataset page, <https://www.unb.ca/cic/datasets/iotdataset-2023.html> (asks you to fill in a short form). Download the CSV version, not the PCAPs.
-- **Kaggle:** several users mirror the CSV files. In a Kaggle Notebook, add the dataset as input and point `--raw-dir` at `/kaggle/input/<dataset-folder>`; nothing needs downloading.
+- **Kaggle (used for this project):** [CICIoT2023 by CongyuanXu](https://www.kaggle.com/datasets/congyuanxu/ciciot2023), a mirror of the original 169 CSV files (`csv/CICIoT2023/part-…-c000.csv`). Add it as a notebook input; `scripts/kaggle_run.py` finds the files on its own. See [`docs/KAGGLE_STEPS.md`](../docs/KAGGLE_STEPS.md).
 
 The full CSV release is ~46M rows (~13 GB). You don't need all of it: `src.load --frac 0.05` keeps a random 5% of every file (~2.3M rows), which is plenty and fits in memory.
 

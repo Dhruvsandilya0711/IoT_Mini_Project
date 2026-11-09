@@ -1,11 +1,9 @@
 """Metrics, cost measurements and result persistence shared by every experiment."""
 
-import os
-import tempfile
+import pickle
 import time
 from pathlib import Path
 
-import joblib
 import pandas as pd
 from sklearn.metrics import (
     accuracy_score,
@@ -59,12 +57,23 @@ def timed(fn, *args, **kwargs):
     return result, time.perf_counter() - start
 
 
+class _ByteCounter:
+    """A write-only file that only counts bytes, so large models are measured without touching disk."""
+
+    def __init__(self):
+        self.n = 0
+
+    def write(self, data):
+        size = memoryview(data).nbytes
+        self.n += size
+        return size
+
+
 def model_size_mb(model):
-    """Size of the model serialised with joblib, i.e. what would be shipped to a gateway."""
-    with tempfile.TemporaryDirectory() as tmp:
-        path = os.path.join(tmp, "model.joblib")
-        joblib.dump(model, path)
-        return os.path.getsize(path) / 1e6
+    """Size of the serialised model (pickle), i.e. what would be shipped to a gateway."""
+    counter = _ByteCounter()
+    pickle.dump(model, counter, protocol=pickle.HIGHEST_PROTOCOL)
+    return counter.n / 1e6
 
 
 def node_count(model):

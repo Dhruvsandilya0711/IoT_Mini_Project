@@ -10,8 +10,8 @@ Everything runs from three lines pasted into one notebook cell (or import `noteb
 ## Steps
 
 1. On Kaggle: left menu **Create** (the + button) → **New Notebook**.
-2. **Add the dataset**: right panel → **Input** → **+ Add Input** → choose the **Datasets** filter (not *Notebooks*) → search **`unb-cic-iot-dataset`** (or `CICIoT2023`).
-   Pick a dataset whose files are named like `part-00000-363d1ba3-….csv` (the full release has 169 of them, ~13 GB; in `unb-cic-iot-dataset` they sit in `wataiData/csv/CICIoT2023/`). Click **+** to add it.
+2. **Add the dataset**: right panel → **Input** → **+ Add Input** → choose the **Datasets** filter (not *Notebooks*) → search **`CICIoT2023`** → add **CICIoT2023 by CongyuanXu** (`kaggle.com/datasets/congyuanxu/ciciot2023`, ~7 GB zipped).
+   It holds the original CSV release: 169 files `csv/CICIoT2023/part-00000-363d1ba3-…-c000.csv` (~13 GB unzipped) and the paper as a PDF. Any other copy with those 169 `part-…csv` files works too (e.g. `unb-cic-iot-dataset`).
    Remove any other input (the **×** next to it), especially other users' notebook outputs such as "creating a smaller dataset…": those files have been modified.
 3. **Turn Internet on**: right panel → **Session options** → **Internet** → **On**. Leave **Accelerator** as **None**.
 4. Delete anything in the first code cell and paste exactly these three lines:
