@@ -1,6 +1,6 @@
 # Running the experiments on Kaggle
 
-Everything runs from three lines pasted into one notebook cell (or import `notebooks/ciciot2023_kaggle.ipynb`). Expect **about 7–10 hours** of run time; you can close the browser while it runs. The script stops starting new runs after 11 hours, so it always finishes within Kaggle's 12-hour limit with `results.zip` saved.
+Everything runs from a few lines pasted into one notebook cell (or import `notebooks/ciciot2023_kaggle.ipynb`). Expect **about 7–10 hours** of run time; you can close the browser while it runs. The script stops starting new runs after 11 hours, so it always finishes within Kaggle's 12-hour limit with `results.zip` saved.
 
 ## One-time setup
 
@@ -14,13 +14,17 @@ Everything runs from three lines pasted into one notebook cell (or import `noteb
    It holds the original CSV release: 169 files `csv/CICIoT2023/part-00000-363d1ba3-…-c000.csv` (~13 GB unzipped) and the paper as a PDF. Any other copy with those 169 `part-…csv` files works too (e.g. `unb-cic-iot-dataset`).
    Remove any other input (the **×** next to it), especially other users' notebook outputs such as "creating a smaller dataset…": those files have been modified.
 3. **Turn Internet on**: right panel → **Session options** → **Internet** → **On**. Leave **Accelerator** as **None**.
-4. Delete anything in the first code cell and paste exactly these three lines:
+4. Delete anything in the first code cell and paste exactly these lines:
 
    ```
+   %cd /kaggle/working
+   !rm -rf IoT_Mini_Project
    !git clone -q --depth 1 -b main https://github.com/Dhruvsandilya0711/IoT_Mini_Project.git
-   %cd IoT_Mini_Project
+   %cd /kaggle/working/IoT_Mini_Project
    !python scripts/kaggle_run.py
    ```
+
+   The first two lines make the cell safe to run again in the same session (they remove an earlier copy).
 
 5. Click **Save Version** (top right) → **Save & Run All (Commit)** → **Save**. It runs in the background; you can close the tab.
 6. Check progress: your profile → **Code** → open the notebook → the version shows *Running*, then *Complete*.
@@ -33,7 +37,7 @@ Everything runs from three lines pasted into one notebook cell (or import `noteb
 - **It stops within the first few minutes**: open the version's **Logs**, copy the last ~30 lines and paste them into the chat.
 - **"No CICIoT2023 files found"**: the dataset wasn't added (step 2), or it isn't the CSV version.
 - **The log says `Using 1 files` or `does not look like the full CICIoT2023 CSV release`**: the input is a notebook's output (a re-shared sample), not the dataset itself. The run still works on it, but with less data. Adding another user's *notebook* as input gives you that notebook's output files, not the dataset it read; to get the 169 files, add the *dataset* (Datasets filter).
-- **Reusing a notebook where the clone already ran**: put `!rm -rf /kaggle/working/IoT_Mini_Project` as the first line, or the clone fails because the folder exists.
+- **`getcwd: cannot access parent directories` / `could not create work tree dir`**: the cell deleted the folder the notebook was in. Use the cell above, which moves to `/kaggle/working` first.
 - **The clone fails**: Internet is off (step 3) or your phone isn't verified.
 - **It runs out of time**: `results.zip` is updated after every phase, so download it anyway and upload it.
 - **Want it faster**: change the last line to `!python scripts/kaggle_run.py --frac 0.02 --seeds "0 1"` (roughly half the time).

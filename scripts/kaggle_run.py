@@ -2,8 +2,10 @@
 
 Paste into ONE code cell of a new Kaggle notebook (with the CICIoT2023 dataset added and Internet on):
 
+    %cd /kaggle/working
+    !rm -rf IoT_Mini_Project
     !git clone -q --depth 1 -b main https://github.com/Dhruvsandilya0711/IoT_Mini_Project.git
-    %cd IoT_Mini_Project
+    %cd /kaggle/working/IoT_Mini_Project
     !python scripts/kaggle_run.py
 
 Options: --rows 1400000 (rows to sample; about 3% of the full dataset), --frac (fixed share instead),
