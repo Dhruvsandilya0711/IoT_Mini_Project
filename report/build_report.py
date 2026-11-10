@@ -175,18 +175,23 @@ def build(results, figdir):
     # ---------- front matter ----------
     cover = f"""
 <section class="cover">
+<div class="group top">
 <img class="logo" src="figures/nitk_logo.png" alt="NITK emblem"/>
 <div class="inst">National Institute of Technology Karnataka<br/>Surathkal</div>
 <div class="dept">Department of Computer Science and Engineering</div>
-<div class="rule"></div>
+</div>
+<div class="group mid">
 <div class="kicker">Internet of Things &middot; Mini Project Report</div>
+<div class="rule"></div>
 <h1>{TITLE}</h1>
-<div class="spacer"></div>
-<div class="by"><div class="label">Submitted by</div><div class="name">{AUTHOR}</div><div class="roll">{ROLL}</div></div>
+</div>
+<div class="group by"><div class="label">Submitted by</div><div class="name">{AUTHOR}</div><div class="roll">{ROLL}</div></div>
+<div class="group foot">
 <div class="base"><b>Base paper:</b> E. C. P. Neto, S. Dadkhah, R. Ferreira, A. Zohourian, R. Lu, A. A. Ghorbani,
 &ldquo;CICIoT2023: A Real-Time Dataset and Benchmark for Large-Scale Attacks in IoT Environment,&rdquo;
 <i>Sensors</i>, vol. 23, no. 13, 5941, 2023.</div>
 <div class="date">{DATE}</div>
+</div>
 </section>"""
 
     abstract = f"""
@@ -704,24 +709,25 @@ code { font-family: 'DejaVu Sans Mono', monospace; font-size: 8.8pt; background:
 b { color: #0E1E33; }
 
 /* cover */
-.cover { position: relative; width: 210mm; height: 296mm; box-sizing: border-box; padding: 28mm 26mm 26mm;
-  display: flex; flex-direction: column; align-items: center; text-align: center; overflow: hidden; break-after: page; }
+.cover { position: relative; width: 210mm; height: 296mm; box-sizing: border-box; padding: 30mm 26mm 28mm;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center;
+  overflow: hidden; break-after: page; }
+.cover .group { display: flex; flex-direction: column; align-items: center; }
 .cover::before { content: ""; position: absolute; inset: 11mm; border: 1.6pt solid #0E1E33; }
 .cover::after { content: ""; position: absolute; inset: 13mm; border: 0.6pt solid #0E9AA7; }
-.cover .logo { width: 42mm; margin-bottom: 9mm; mix-blend-mode: multiply; }
+.cover .logo { width: 46mm; margin-bottom: 8mm; mix-blend-mode: multiply; }
 .cover .inst { font-family: 'Caladea', 'Cambria', serif; font-size: 15.5pt; line-height: 1.35; font-weight: bold; letter-spacing: 0.8pt;
   text-transform: uppercase; color: #0E1E33; }
-.cover .dept { font-size: 12.5pt; color: #3D5A80; margin-top: 4pt; }
-.cover .rule { width: 48mm; border-top: 1.4pt solid #0E9AA7; margin: 12mm 0 10mm; }
+.cover .dept { font-size: 12.5pt; color: #3D5A80; margin-top: 5pt; }
+.cover .rule { width: 48mm; border-top: 1.4pt solid #0E9AA7; margin: 6mm 0 7mm; }
 .cover .kicker { font-size: 9.5pt; letter-spacing: 2.2pt; text-transform: uppercase; color: #0B7F8A; font-weight: bold; }
-.cover h1 { font-size: 25pt; margin: 10pt 0 12pt; max-width: 152mm; text-wrap: balance; }
-.cover .spacer { flex: 1; }
+.cover h1 { font-size: 26pt; line-height: 1.22; margin: 0; max-width: 160mm; text-wrap: balance; }
 .cover .by .label { font-size: 9pt; letter-spacing: 2pt; text-transform: uppercase; color: #5A6575; }
 .cover .by .name { font-family: 'Caladea', 'Cambria', serif; font-size: 18pt; font-weight: bold; color: #0E1E33; margin-top: 5pt; }
 .cover .by .roll { font-size: 12.5pt; letter-spacing: 1pt; margin-top: 1pt; }
-.cover .base { margin-top: 13mm; max-width: 140mm; font-size: 9.2pt; line-height: 1.45; color: #5A6575; }
+.cover .base { max-width: 140mm; font-size: 9.2pt; line-height: 1.45; color: #5A6575; }
 .cover .base b { color: #3D5A80; }
-.cover .date { margin-top: 7mm; font-size: 11pt; font-weight: bold; letter-spacing: 1.2pt; color: #0E1E33; }
+.cover .date { margin-top: 6mm; font-size: 11pt; font-weight: bold; letter-spacing: 1.2pt; color: #0E1E33; }
 
 /* abstract and contents */
 h2.plain { font-size: 22pt; margin: 0 0 14pt; padding-bottom: 8pt; border-bottom: 1.2pt solid #0E1E33; }
