@@ -1,7 +1,7 @@
-"""Build the Phase 2 report (HTML, then PDF via render_pdf.cjs) from the result files.
+"""Build the mini project report (HTML, then PDF via render_pdf.cjs) from the result files.
 
     python report/build_report.py --results results --out report/report.html
-    node report/render_pdf.cjs report/report.html report/Phase2_Report.pdf
+    node report/render_pdf.cjs report/report.html report/Mini_Project_Report.pdf
 
 Every number in the report is read from results/ (or, for the base paper, from its Tables 6 and 8),
 so the text never drifts from the data.
@@ -179,9 +179,8 @@ def build(results, figdir):
 <div class="inst">National Institute of Technology Karnataka<br/>Surathkal</div>
 <div class="dept">Department of Computer Science and Engineering</div>
 <div class="rule"></div>
-<div class="kicker">Internet of Things &middot; Mini Project &middot; Phase 2 Report</div>
+<div class="kicker">Internet of Things &middot; Mini Project Report</div>
 <h1>{TITLE}</h1>
-<div class="subtitle">Designing an IoT gateway intrusion detection system with the 10-step IoT design methodology</div>
 <div class="spacer"></div>
 <div class="by"><div class="label">Submitted by</div><div class="name">{AUTHOR}</div><div class="roll">{ROLL}</div></div>
 <div class="base"><b>Base paper:</b> E. C. P. Neto, S. Dadkhah, R. Ferreira, A. Zohourian, R. Lu, A. A. Ghorbani,
@@ -716,7 +715,6 @@ b { color: #0E1E33; }
 .cover .rule { width: 48mm; border-top: 1.4pt solid #0E9AA7; margin: 12mm 0 10mm; }
 .cover .kicker { font-size: 9.5pt; letter-spacing: 2.2pt; text-transform: uppercase; color: #0B7F8A; font-weight: bold; }
 .cover h1 { font-size: 25pt; margin: 10pt 0 12pt; max-width: 152mm; text-wrap: balance; }
-.cover .subtitle { font-size: 12.5pt; font-style: italic; color: #3D5A80; max-width: 130mm; line-height: 1.4; }
 .cover .spacer { flex: 1; }
 .cover .by .label { font-size: 9pt; letter-spacing: 2pt; text-transform: uppercase; color: #5A6575; }
 .cover .by .name { font-family: 'Caladea', 'Cambria', serif; font-size: 18pt; font-weight: bold; color: #0E1E33; margin-top: 5pt; }
@@ -776,7 +774,7 @@ table.spec td:first-child { font-weight: bold; color: #0E1E33; white-space: nowr
     toc = H.contents()
     body = (cover + abstract + toc + intro + background + design + method + repro + improve + extend
             + discussion + conclusion + references + appendix)
-    return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Phase 2 Report: {TITLE}</title>'
+    return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Mini Project Report: {TITLE}</title>'
             f"<style>{css}</style></head><body>{body}</body></html>")
 
 

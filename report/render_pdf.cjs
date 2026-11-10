@@ -1,5 +1,5 @@
 // Render the report HTML to an A4 PDF:
-//   node report/render_pdf.cjs report/report.html report/Phase2_Report.pdf
+//   node report/render_pdf.cjs report/report.html report/Mini_Project_Report.pdf
 //
 // The cover is printed without the running header and footer, and the contents page gets the page number of
 // every heading, looked up in a first render with pdftotext. The cover and the body are then joined with
@@ -15,7 +15,7 @@ const SIDE = "padding:0 20mm; box-sizing:border-box; width:100%; font-family:Car
   "font-size:7.5pt; color:#5A6575; display:flex; justify-content:space-between; -webkit-print-color-adjust:exact;";
 const HEADER = `<div style="${SIDE}"><div style="width:100%; display:flex; justify-content:space-between;
   border-bottom:0.5pt solid #D5DCE4; padding-bottom:3pt;"><span>Addressing Class Imbalance in CICIoT2023-Based
-  Intrusion Detection</span><span>Phase 2 Report</span></div></div>`;
+  Intrusion Detection</span><span>Mini Project Report</span></div></div>`;
 const FOOTER = `<div style="${SIDE}"><span>Dhruv Sandilya &middot; 231CS122 &middot; NITK Surathkal</span>
   <span class="pageNumber"></span></div>`;
 const PRINT = { format: "A4", printBackground: true, preferCSSPageSize: true };

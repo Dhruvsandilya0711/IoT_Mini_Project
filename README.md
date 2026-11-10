@@ -17,7 +17,7 @@ Course brief: [`docs/Mini-Projects.pdf`](docs/Mini-Projects.pdf)
 
 ## Results (Phase 2)
 
-Deliverables: **[report (PDF)](report/Phase2_Report.pdf)** · [final slides](slides/Phase2_Results.pptx) · [proposal slides](slides/Phase1_Proposal.pptx) · [interactive results page](docs/results.html) (download and open in a browser) · raw results in [`results/`](results/)
+Deliverables: **[report (PDF)](report/Mini_Project_Report.pdf)** · [final slides](slides/Phase2_Results.pptx) · [proposal slides](slides/Phase1_Proposal.pptx) · [interactive results page](docs/results.html) (download and open in a browser) · raw results in [`results/`](results/)
 
 Run on the full CSV release (169 files, 3% sample = 1,401,354 flows, duplicates removed), 123 training runs, 2.7 h on a Kaggle CPU.
 
@@ -52,7 +52,7 @@ tests/                  fake-data generator + end-to-end test
 data/                   raw and processed data (not committed, see data/README.md)
 results/                runs.csv, per-class tables, confusion matrices, figures
 docs/                   course brief, Kaggle and Raspberry Pi guides, interactive results page (results.html)
-report/                 Phase 2 report: build_report.py -> report.html -> Phase2_Report.pdf, figures, diagrams (Graphviz)
+report/                 project report: build_report.py -> report.html -> Mini_Project_Report.pdf, figures, diagrams (Graphviz)
 slides/                 Phase 1 proposal and Phase 2 results decks
 ```
 

@@ -1,4 +1,4 @@
-"""Figures for the Phase 2 report and slides that combine several result tables.
+"""Figures for the project report and slides that combine several result tables.
 
     python scripts/report_figures.py --results results --out report/figures
 
