@@ -17,7 +17,7 @@ Plan and deadlines: [`docs/TIMELINE.md`](docs/TIMELINE.md) · Course brief: [`do
 
 ## Results (Phase 2)
 
-Deliverables: **[report (PDF)](report/Phase2_Report.pdf)** · [final slides](slides/Phase2_Results.pptx) · [proposal slides](slides/Phase1_Proposal.pptx) · raw results in [`results/`](results/)
+Deliverables: **[report (PDF)](report/Phase2_Report.pdf)** · [final slides](slides/Phase2_Results.pptx) · [proposal slides](slides/Phase1_Proposal.pptx) · [interactive results page](docs/results.html) (download and open in a browser) · raw results in [`results/`](results/)
 
 Run on the full CSV release (169 files, 3% sample = 1,401,354 flows, duplicates removed), 123 training runs, 2.7 h on a Kaggle CPU.
 
@@ -50,7 +50,7 @@ scripts/run_experiments.sh   the full experiment matrix, phase by phase
 tests/                  fake-data generator + end-to-end test
 data/                   raw and processed data (not committed, see data/README.md)
 results/                runs.csv, per-class tables, confusion matrices, figures
-docs/                   timeline, course brief, paper notes, Kaggle guide
+docs/                   timeline, course brief, paper notes, Kaggle guide, interactive results page (results.html)
 report/                 Phase 2 report: build_report.py -> report.html -> Phase2_Report.pdf, figures, diagrams (Graphviz)
 slides/                 Phase 1 proposal and Phase 2 results decks
 ```
