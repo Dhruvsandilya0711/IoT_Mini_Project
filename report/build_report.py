@@ -579,8 +579,8 @@ a two-stage detector that first separates the common floods and then classifies 
     references = "<h2 id='refs'>References</h2><ol class='refs'>" + "".join(f"<li>{r}</li>" for r in refs) + "</ol>"
     appendix = """
 <h2 id="appA">Appendix A: Reproducibility</h2>
-<p>Code, tests, results and this report: <b>github.com/Dhruvsandilya0711/IoT_Mini_Project</b> (branch
-<code>main</code>). On Kaggle, with the CICIoT2023 CSV dataset [12] attached and Internet
+<p>Code, tests, results and this report: <b>github.com/Dhruvsandilya0711/IoT_Mini_Project</b>.
+On Kaggle, with the CICIoT2023 CSV dataset [12] attached and Internet
 enabled, one notebook cell clones the repository and runs <code>python scripts/kaggle_run.py</code>, which samples
 the data, runs every experiment (baseline, improvement, extension, duplicates) and packs <code>results.zip</code>.
 Locally, <code>python -m pytest</code> runs the whole pipeline on synthetic data in about 20 seconds.

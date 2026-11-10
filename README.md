@@ -13,7 +13,7 @@ CICIoT2023 contains IoT network traffic from 105 devices under 33 attacks in 7 c
 | **Improvement** | Fix the imbalance using the *training set only*: SMOTE, Borderline-SMOTE, SMOTE + undersampling, class weights, and decision-threshold tuning on the validation split | Before/after per-class tables, recall-gain charts, bootstrap confidence intervals and McNemar tests against the baseline |
 | **Extension** | Feature selection (mutual information, RF importance, RFE) to shrink the 46 features for resource-constrained IoT gateways | Performance and cost (latency, model size) against the number of features |
 
-Plan and deadlines: [`docs/TIMELINE.md`](docs/TIMELINE.md) · Course brief: [`docs/Mini-Projects.pdf`](docs/Mini-Projects.pdf)
+Course brief: [`docs/Mini-Projects.pdf`](docs/Mini-Projects.pdf)
 
 ## Results (Phase 2)
 
@@ -50,7 +50,7 @@ scripts/run_experiments.sh   the full experiment matrix, phase by phase
 tests/                  fake-data generator + end-to-end test
 data/                   raw and processed data (not committed, see data/README.md)
 results/                runs.csv, per-class tables, confusion matrices, figures
-docs/                   timeline, course brief, paper notes, Kaggle guide, interactive results page (results.html)
+docs/                   course brief, Kaggle guide, interactive results page (results.html)
 report/                 Phase 2 report: build_report.py -> report.html -> Phase2_Report.pdf, figures, diagrams (Graphviz)
 slides/                 Phase 1 proposal and Phase 2 results decks
 ```
@@ -72,13 +72,13 @@ python -m src.load --raw-dir data/raw --frac 0.05           # ~2.3M rows, same c
 python -m src.preprocess                                    # data/processed/{train,val,test}.parquet
 python -m src.eda                                           # results/eda/ (Fig. 1: class imbalance)
 
-# 2. Week 1: reproduction
+# 2. Reproduction
 scripts/run_experiments.sh baseline
 
-# 3. Week 2: improvement
+# 3. Improvement
 scripts/run_experiments.sh improvement
 
-# 4. Week 3: extension (set EXT_STRATEGY to the best Week-2 strategy)
+# 4. Extension (set EXT_STRATEGY to the best improvement strategy)
 EXT_STRATEGY=smote scripts/run_experiments.sh extension
 ```
 
