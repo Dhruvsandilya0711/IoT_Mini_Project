@@ -1,0 +1,19 @@
+{
+  "raw_dir": "/tmp/ciciot2023_raw",
+  "files_read": 169,
+  "frac": 0.029987,
+  "seed": 42,
+  "keep_all": [],
+  "rows": 1401354,
+  "features": 46,
+  "rows_per_category": {
+    "DDoS": 1019793,
+    "DoS": 243434,
+    "Mirai": 78728,
+    "Benign": 33337,
+    "Spoofing": 14522,
+    "Recon": 10382,
+    "Web": 764,
+    "BruteForce": 394
+  }
+}

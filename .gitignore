@@ -12,3 +12,6 @@ __pycache__/
 .venv/
 venv/
 .DS_Store
+
+# Raw per-run test predictions (~18 MB); the significance tables in results/tables are computed from them.
+results/predictions/

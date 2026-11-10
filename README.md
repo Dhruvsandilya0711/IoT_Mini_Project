@@ -15,6 +15,21 @@ CICIoT2023 contains IoT network traffic from 105 devices under 33 attacks in 7 c
 
 Plan and deadlines: [`docs/TIMELINE.md`](docs/TIMELINE.md) · Course brief: [`docs/Mini-Projects.pdf`](docs/Mini-Projects.pdf)
 
+## Results (Phase 2)
+
+Deliverables: **[report (PDF)](report/Phase2_Report.pdf)** · [final slides](slides/Phase2_Results.pptx) · [proposal slides](slides/Phase1_Proposal.pptx) · raw results in [`results/`](results/)
+
+Run on the full CSV release (169 files, 3% sample = 1,401,354 flows, duplicates removed), 123 training runs, 2.7 h on a Kaggle CPU.
+
+| | Result |
+|---|---|
+| **Reproduction** | Random Forest accuracy 0.995 (8 classes) vs 0.994 in the paper; same blind spot (Web recall 0.16, BruteForce 0.24). The paper's Table 6 has precision and recall swapped (checked against its own confusion matrix). |
+| **Improvement** | Every imbalance method beats the Random Forest baseline (paired bootstrap p < 0.05). Threshold tuning: macro-F1 0.785 → 0.851 at no size cost; SMOTE: rare-class recall 0.398 → 0.626. |
+| **Extension** | 20 of 46 features keep macro-F1 (0.856) with 22% faster prediction and a 28% smaller model; a class-weighted Decision Tree reaches 0.841 in 1.1 MB. |
+| **Data hygiene** | Without de-duplication, 15.9% of test rows have an exact copy in the training data. |
+
+The report follows the 10-step IoT design methodology (purpose, process model, domain model, information model, services, IoT level, functional view, operational view, integration, application development).
+
 ## Repository layout
 
 ```
@@ -35,7 +50,9 @@ scripts/run_experiments.sh   the full experiment matrix, phase by phase
 tests/                  fake-data generator + end-to-end test
 data/                   raw and processed data (not committed, see data/README.md)
 results/                runs.csv, per-class tables, confusion matrices, figures
-docs/                   timeline, course brief, paper notes
+docs/                   timeline, course brief, paper notes, Kaggle guide
+report/                 Phase 2 report: build_report.py -> report.html -> Phase2_Report.pdf, figures, diagrams (Graphviz)
+slides/                 Phase 1 proposal and Phase 2 results decks
 ```
 
 ## Setup

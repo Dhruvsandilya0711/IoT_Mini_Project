@@ -1,0 +1,20 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="#ffffff", pad=0.2, nodesep=0.25, ranksep=0.35, fontname="DejaVu Sans"];
+  node  [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=11, color="#0E1E33", fillcolor="#EEF3F7", margin="0.15,0.08", width=2.3];
+  edge  [color="#3D5A80", penwidth=1.4, arrowsize=0.7];
+  s1 [label=<<b>1. Purpose &amp; requirements</b><br/><font point-size="9">detect IoT attacks, incl. rare ones</font>>];
+  s2 [label=<<b>2. Process model</b><br/><font point-size="9">detection + training flowchart</font>>];
+  s3 [label=<<b>3. Domain model</b><br/><font point-size="9">physical / virtual entities</font>>];
+  s4 [label=<<b>4. Information model</b><br/><font point-size="9">flow window, detection, alert</font>>];
+  s5 [label=<<b>5. Service specifications</b><br/><font point-size="9">capture, detect, alert, update</font>>];
+  s6 [label=<<b>6. IoT level</b><br/><font point-size="9">Level 5: devices, gateway, cloud</font>>, fillcolor="#FDEBD0", color="#B7791F"];
+  s7 [label=<<b>7. Functional view</b><br/><font point-size="9">IoT-A functional groups</font>>];
+  s8 [label=<<b>8. Operational view</b><br/><font point-size="9">Raspberry Pi, MQTT/TLS, cloud</font>>];
+  s9 [label=<<b>9. Device &amp; component integration</b><br/><font point-size="9">tap, gateway, cloud wiring</font>>];
+  s10 [label=<<b>10. Application development</b><br/><font point-size="9">ML pipeline: reproduce, improve, extend</font>>, fillcolor="#D7EFF1", color="#0E9AA7"];
+  { rank=same; s1; s10; } { rank=same; s2; s9; } { rank=same; s3; s8; } { rank=same; s4; s7; } { rank=same; s5; s6; }
+  s1 -> s2 -> s3 -> s4 -> s5;
+  s5 -> s6;
+  s6 -> s7 [constraint=false]; s7 -> s8 [constraint=false]; s8 -> s9 [constraint=false]; s9 -> s10 [constraint=false];
+  s10 -> s9 [style=invis]; s9 -> s8 [style=invis]; s8 -> s7 [style=invis]; s7 -> s6 [style=invis];
+}

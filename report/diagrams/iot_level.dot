@@ -1,0 +1,23 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="#ffffff", pad=0.2, nodesep=0.25, ranksep=0.8, fontname="DejaVu Sans", compound=true];
+  node  [fontname="DejaVu Sans", fontsize=10, color="#0E1E33", style="rounded,filled", fillcolor="#EEF3F7", shape=box];
+  edge  [color="#3D5A80", penwidth=1.2, arrowsize=0.7, fontname="DejaVu Sans", fontsize=9, fontcolor="#52514e"];
+  subgraph cluster_end {
+    label=<<b>End nodes</b><br/><font point-size="9">sensing / traffic sources</font>>; color="#3D5A80"; style="rounded";
+    d1 [label="Smart cameras"]; d2 [label="Smart plugs / bulbs"]; d3 [label="Sensors, hubs\n(Zigbee / Z-Wave)"]; d4 [label="Speakers, appliances"];
+    d5 [label="Malicious IoT devices\n(attack sources)", fillcolor="#F8D7CF", color="#E4572E"];
+  }
+  gw [label=<<b>Coordinator node: IoT gateway</b><br/><font point-size="9">collects all traffic (tap), extracts features,<br/>runs the detection model locally (edge),<br/>forwards alerts and summaries</font>>, fillcolor="#D7EFF1", color="#0E9AA7"];
+  subgraph cluster_cloud {
+    label=<<b>Cloud</b>>; color="#B7791F"; style="rounded";
+    st [label="Storage\n(alerts, statistics)", shape=cylinder];
+    an [label="Analysis\n(retraining, rebalancing,\nfeature selection)"];
+    app [label="Application\n(web dashboard)"];
+    reg [label="Model registry"];
+  }
+  admin [label="Administrator\n(observer)", fillcolor="#FFFFFF"];
+  d1 -> gw; d2 -> gw; d3 -> gw; d4 -> gw; d5 -> gw;
+  gw -> st [label=" MQTT / TLS"];
+  st -> an; an -> reg; reg -> gw [label=" model update (HTTPS)", constraint=false];
+  st -> app; app -> admin;
+}

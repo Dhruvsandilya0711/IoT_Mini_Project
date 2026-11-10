@@ -1,0 +1,36 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="#ffffff", pad=0.2, nodesep=0.35, ranksep=0.6, fontname="DejaVu Sans"];
+  node  [shape=plain, fontname="DejaVu Sans", fontsize=9];
+  edge  [color="#3D5A80", penwidth=1.2, arrowsize=0.7, fontname="DejaVu Sans", fontsize=9, fontcolor="#52514e", dir=both, arrowtail=none];
+  device [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#0E1E33" bgcolor="#EEF3F7">
+    <tr><td bgcolor="#0E1E33"><font color="white"><b>IoTDevice</b></font></td></tr>
+    <tr><td align="left">device_id, MAC, IP</td></tr><tr><td align="left">type, vendor, protocol</td></tr><tr><td align="left">last_seen</td></tr></table>>];
+  flow [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#0E1E33" bgcolor="#EEF3F7">
+    <tr><td bgcolor="#0E1E33"><font color="white"><b>FlowWindow</b> (46 features)</font></td></tr>
+    <tr><td align="left">window_id, device_id, timestamp</td></tr>
+    <tr><td align="left">flow_duration, Header_Length, Protocol Type,</td></tr>
+    <tr><td align="left">Duration (TTL), Rate, Srate, Drate</td></tr>
+    <tr><td align="left">7 flag values: fin ... cwr_flag_number</td></tr>
+    <tr><td align="left">5 flag counts: ack/syn/fin/urg/rst_count</td></tr>
+    <tr><td align="left">14 protocol indicators: HTTP ... LLC</td></tr>
+    <tr><td align="left">Tot sum, Min, Max, AVG, Std, Tot size, IAT,</td></tr>
+    <tr><td align="left">Number, Magnitue, Radius, Covariance,</td></tr>
+    <tr><td align="left">Variance, Weight</td></tr></table>>];
+  det [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#0E9AA7" bgcolor="#D7EFF1">
+    <tr><td bgcolor="#0E9AA7"><font color="white"><b>Detection</b></font></td></tr>
+    <tr><td align="left">window_id, model_version</td></tr><tr><td align="left">attack_type (34 classes)</td></tr>
+    <tr><td align="left">category (8 classes), is_attack</td></tr><tr><td align="left">confidence, latency_us</td></tr></table>>];
+  alert [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#B7791F" bgcolor="#FDEBD0">
+    <tr><td bgcolor="#B7791F"><font color="white"><b>Alert</b></font></td></tr>
+    <tr><td align="left">alert_id, device_id</td></tr><tr><td align="left">category, attack_type, severity</td></tr>
+    <tr><td align="left">first_seen, last_seen, count</td></tr><tr><td align="left">status (open / acknowledged)</td></tr></table>>];
+  model [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" color="#0E1E33" bgcolor="#EEF3F7">
+    <tr><td bgcolor="#0E1E33"><font color="white"><b>ModelArtifact</b></font></td></tr>
+    <tr><td align="left">model_version, algorithm</td></tr><tr><td align="left">imbalance_method, class weights</td></tr>
+    <tr><td align="left">feature list (top-k), scaler</td></tr><tr><td align="left">macro-F1, rare-class recall</td></tr>
+    <tr><td align="left">size_mb, latency_us, sha256</td></tr></table>>];
+  device -> flow [label=" 1 .. *"];
+  flow -> det [label=" 1 .. 1"];
+  det -> alert [label=" * .. 0..1"];
+  model -> det [label=" 1 .. *"];
+}

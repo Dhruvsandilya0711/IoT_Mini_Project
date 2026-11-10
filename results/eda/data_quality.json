@@ -1,0 +1,11 @@
+{
+  "rows": 1401354,
+  "features": 46,
+  "rows_with_nan": 0,
+  "rows_with_inf": 0,
+  "duplicate_rows": 166898,
+  "constant_features": [
+    "Telnet",
+    "SMTP"
+  ]
+}
