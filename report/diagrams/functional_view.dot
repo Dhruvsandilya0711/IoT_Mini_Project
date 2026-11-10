@@ -1,0 +1,30 @@
+digraph G {
+  graph [bgcolor="#ffffff", pad=0.2, fontname="DejaVu Sans"];
+  node [shape=plain, fontname="DejaVu Sans", fontsize=10];
+  fv [label=<
+  <table border="0" cellborder="1" cellspacing="4" cellpadding="7" color="#0E1E33">
+    <tr><td bgcolor="#0E9AA7" width="150"><font color="white"><b>Application FG</b></font></td>
+        <td bgcolor="#D7EFF1" colspan="2">Web dashboard: alerts by device, category and time</td>
+        <td bgcolor="#D7EFF1">Administrator notifications</td></tr>
+    <tr><td bgcolor="#3D5A80"><font color="white"><b>Management FG</b></font></td>
+        <td bgcolor="#EEF3F7">Model registry and versioning</td>
+        <td bgcolor="#EEF3F7">Gateway configuration (top-k features, class weights)</td>
+        <td bgcolor="#EEF3F7">Gateway health monitoring</td></tr>
+    <tr><td bgcolor="#3D5A80"><font color="white"><b>Services FG</b></font></td>
+        <td bgcolor="#EEF3F7">Capture + feature extraction</td>
+        <td bgcolor="#EEF3F7">Detection (classifier + tuned weights)</td>
+        <td bgcolor="#EEF3F7">Alert; model update; training</td></tr>
+    <tr><td bgcolor="#3D5A80"><font color="white"><b>Communication FG</b></font></td>
+        <td bgcolor="#EEF3F7">Links: Wi-Fi, Ethernet, Zigbee, Z-Wave</td>
+        <td bgcolor="#EEF3F7">Network / transport: IPv4, TCP, UDP</td>
+        <td bgcolor="#EEF3F7">Application: MQTT (alerts), HTTPS (updates, dashboard)</td></tr>
+    <tr><td bgcolor="#3D5A80"><font color="white"><b>Device FG</b></font></td>
+        <td bgcolor="#EEF3F7">IoT devices (105 in the CICIoT2023 testbed)</td>
+        <td bgcolor="#EEF3F7">IoT gateway: Raspberry Pi 4 + network tap</td>
+        <td bgcolor="#EEF3F7">Cloud server</td></tr>
+    <tr><td bgcolor="#B7791F"><font color="white"><b>Security FG</b><br/>(spans all layers)</font></td>
+        <td bgcolor="#FDEBD0">TLS for MQTT and HTTPS, client certificates</td>
+        <td bgcolor="#FDEBD0">SHA-256 check before a model is installed</td>
+        <td bgcolor="#FDEBD0">Dashboard authentication and access control</td></tr>
+  </table>>];
+}

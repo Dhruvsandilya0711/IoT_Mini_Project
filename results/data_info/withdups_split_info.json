@@ -1,0 +1,65 @@
+{
+  "sample": "data/processed/sample.parquet",
+  "out_dir": "data/processed_withdups",
+  "test_size": 0.2,
+  "val_size": 0.1,
+  "seed": 42,
+  "drop_duplicates": false,
+  "min_class_rows": 10,
+  "cleaning": {
+    "rows_in": 1401354,
+    "rows_with_inf": 0,
+    "rows_with_nan": 0,
+    "rows_out": 1401354,
+    "test_rows_also_in_train": 44441,
+    "test_share_also_in_train": 0.15856438946590978
+  },
+  "dropped_classes": [],
+  "rows": {
+    "train": 1008974,
+    "val": 112109,
+    "test": 280271
+  },
+  "rows_per_category": {
+    "DDoS": {
+      "train": 734248,
+      "val": 81585,
+      "test": 203960
+    },
+    "DoS": {
+      "train": 175273,
+      "val": 19475,
+      "test": 48686
+    },
+    "Mirai": {
+      "train": 56684,
+      "val": 6298,
+      "test": 15746
+    },
+    "Benign": {
+      "train": 24003,
+      "val": 2667,
+      "test": 6667
+    },
+    "Spoofing": {
+      "train": 10456,
+      "val": 1162,
+      "test": 2904
+    },
+    "Recon": {
+      "train": 7476,
+      "val": 830,
+      "test": 2076
+    },
+    "Web": {
+      "train": 550,
+      "val": 61,
+      "test": 153
+    },
+    "BruteForce": {
+      "train": 284,
+      "val": 31,
+      "test": 79
+    }
+  }
+}

@@ -1,0 +1,1141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>CICIoT2023 Rare-Attack Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column with full-width figure panels; sections follow the project's own order
+   (data -> reproduction -> rebalancing -> models -> 34 classes -> features -> duplicates); a slim sticky index on top.
+   Color: deck navy ink on a cool grey plane, one teal accent for "rare traffic"; chart series use the report's
+   strategy colors so a method keeps its color everywhere. Type: wide Archivo for display, Plex Sans for text,
+   Plex Mono for flow-log labels and numbers. */
+:root {
+  --page: #eef2f5;
+  --surface: #fbfcfd;
+  --ink: #0e1e33;
+  --ink-2: #44536a;
+  --muted: #637087;
+  --rule: #d6dde6;
+  --grid: #e3e8ee;
+  --axis: #b9c3cf;
+  --hover: rgba(14, 30, 51, 0.05);
+  --accent: #0b7f8a;
+  --accent-wash: rgba(11, 127, 138, 0.10);
+  --on-accent: #ffffff;
+  --cell-a: #c3cdd9;
+  --cell-b: #a9b6c6;
+  --tip-bg: #0e1e33;
+  --tip-ink: #eef2f5;
+  --s-paper: #9aa5b4;
+  --s-none: #2a78d6;
+  --s-smote: #eb6834;
+  --s-hybrid: #1baf7a;
+  --s-cw: #eda100;
+  --s-border: #e87ba4;
+  --s-thr: #008300;
+  --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0a1220;
+    --surface: #101b2c;
+    --ink: #e6ecf3;
+    --ink-2: #a9b6c6;
+    --muted: #8a97aa;
+    --rule: #22314a;
+    --grid: #1c293c;
+    --axis: #34445e;
+    --hover: rgba(230, 236, 243, 0.06);
+    --accent: #4cc6d1;
+    --accent-wash: rgba(76, 198, 209, 0.12);
+    --on-accent: #0a1220;
+    --cell-a: #22324a;
+    --cell-b: #2f415c;
+    --tip-bg: #e6ecf3;
+    --tip-ink: #0e1e33;
+    --s-paper: #66758b;
+    --s-none: #3987e5;
+    --s-smote: #d95926;
+    --s-hybrid: #199e70;
+    --s-cw: #c98500;
+    --s-border: #d55181;
+    --s-thr: #0f9a0f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0a1220;
+  --surface: #101b2c;
+  --ink: #e6ecf3;
+  --ink-2: #a9b6c6;
+  --muted: #8a97aa;
+  --rule: #22314a;
+  --grid: #1c293c;
+  --axis: #34445e;
+  --hover: rgba(230, 236, 243, 0.06);
+  --accent: #4cc6d1;
+  --accent-wash: rgba(76, 198, 209, 0.12);
+  --on-accent: #0a1220;
+  --cell-a: #22324a;
+  --cell-b: #2f415c;
+  --tip-bg: #e6ecf3;
+  --tip-ink: #0e1e33;
+  --s-paper: #66758b;
+  --s-none: #3987e5;
+  --s-smote: #d95926;
+  --s-hybrid: #199e70;
+  --s-cw: #c98500;
+  --s-border: #d55181;
+  --s-thr: #0f9a0f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--page);
+}
+a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+.wrap {
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.mono { font-family: var(--font-mono); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* index bar */
+.index {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 5;
+  background: color-mix(in srgb, var(--page) 90%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+.index .wrap { display: flex; align-items: center; gap: 20px; padding-block: 10px; }
+.index .mark { font-family: var(--font-display); font-stretch: 112%; font-weight: 800; font-size: 0.95rem; letter-spacing: 0.01em; white-space: nowrap; }
+.index .mark span { color: var(--accent); }
+.index nav { min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.index nav::-webkit-scrollbar { display: none; }
+.index ul { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.index a {
+  display: block; padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+  color: var(--ink-2); text-decoration: none; font-size: 0.8125rem; font-weight: 500;
+}
+.index a:hover { background: var(--hover); color: var(--ink); }
+.index a.on { background: var(--accent-wash); color: var(--ink); }
+
+/* hero */
+.hero { padding-block: 56px 28px; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 14px;
+}
+.hero h1 {
+  font-family: var(--font-display); font-stretch: 125%; font-weight: 850;
+  font-size: clamp(3.4rem, 13vw, 8.75rem); line-height: 0.88; letter-spacing: -0.035em;
+  margin: 0 0 22px; text-wrap: balance;
+}
+.hero h1 .one { color: var(--accent); }
+.lede { font-size: clamp(1.0625rem, 1.9vw, 1.25rem); line-height: 1.5; color: var(--ink-2); max-width: 40em; margin: 0; text-wrap: pretty; }
+.lede strong { color: var(--ink); font-weight: 600; }
+.byline { margin: 16px 0 0; font-size: 0.875rem; color: var(--muted); }
+
+.waffle-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 28px; margin-top: 36px; align-items: start; }
+.waffle-box { position: relative; min-width: 0; }
+#waffle { display: block; width: 100%; touch-action: manipulation; cursor: crosshair; }
+.bf-ring { position: absolute; border: 2px solid var(--accent); border-radius: 50%; pointer-events: none; }
+.bf-ring::after {
+  content: ""; position: absolute; inset: -2px; border: 2px solid var(--accent); border-radius: 50%;
+  animation: ping 2.6s ease-out infinite;
+}
+@keyframes ping { 0% { transform: scale(1); opacity: 1; } 70% { transform: scale(2.6); opacity: 0; } 100% { transform: scale(2.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .bf-ring::after { animation: none; opacity: 0; } }
+.bf-note {
+  position: absolute; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.3; color: var(--ink);
+  white-space: nowrap; pointer-events: none;
+}
+.bf-note b { color: var(--accent); font-weight: 500; }
+.waffle-cap { font-size: 0.8125rem; color: var(--muted); margin: 12px 0 0; max-width: 60em; }
+
+.classes { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+.classes caption { text-align: left; font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding-bottom: 8px; }
+.classes td { padding: 5px 0; border-bottom: 1px solid var(--rule); vertical-align: baseline; }
+.classes td.n { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-2); padding-left: 10px; white-space: nowrap; }
+.classes tr.rare td { color: var(--ink); }
+.classes tr.rare td:first-child { font-weight: 600; }
+.sq { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 8px; vertical-align: 0; }
+.classes .tot td { border-bottom: 0; color: var(--muted); padding-top: 8px; }
+
+.facts { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 22px 0 0; padding: 0; list-style: none; font-size: 0.8125rem; color: var(--ink-2); }
+.facts b { font-family: var(--font-mono); font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: 40px; border-top: 1px solid var(--ink); }
+.stat { padding: 18px 22px 4px 0; min-width: 0; }
+.stat + .stat { padding-left: 22px; border-left: 1px solid var(--rule); }
+.stat .v { font-family: var(--font-display); font-stretch: 118%; font-weight: 800; font-size: clamp(2.2rem, 5.2vw, 3.4rem); line-height: 1; letter-spacing: -0.02em; }
+.stat .v small { font-size: 0.5em; font-weight: 700; color: var(--muted); letter-spacing: 0; }
+.stat .k { margin-top: 10px; font-size: 0.9375rem; color: var(--ink-2); line-height: 1.45; }
+.stat .k b { color: var(--ink); font-weight: 600; }
+
+/* sections */
+.sec { padding-block: 64px; border-top: 1px solid var(--rule); }
+.sec-head { max-width: 46em; }
+.sec h2 {
+  font-family: var(--font-display); font-stretch: 110%; font-weight: 780;
+  font-size: clamp(1.65rem, 3.8vw, 2.5rem); line-height: 1.08; letter-spacing: -0.015em;
+  margin: 0 0 14px; text-wrap: balance;
+}
+.sec p { margin: 0 0 12px; max-width: 42em; color: var(--ink-2); text-wrap: pretty; }
+.sec p strong { color: var(--ink); font-weight: 600; }
+.part { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px; }
+
+.fig {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 12px;
+  padding: 20px 22px 18px; margin-top: 28px; min-width: 0;
+}
+.fig h3 { font-family: var(--font-body); font-size: 1rem; font-weight: 600; margin: 0; color: var(--ink); }
+.fig .sub { font-size: 0.8125rem; color: var(--muted); margin: 2px 0 0; max-width: none; }
+.fig .chart { margin-top: 14px; min-height: 120px; }
+.fig .note { font-size: 0.8125rem; color: var(--muted); margin: 10px 0 0; max-width: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0 0; padding: 0; list-style: none; font-size: 0.8125rem; color: var(--ink-2); }
+.legend li { display: flex; align-items: center; gap: 7px; }
+.key { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.key.ring { background: transparent !important; border: 2px solid var(--s-none); }
+
+.two { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.two > .fig { margin-top: 28px; }
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 14px; }
+.trio h4 { margin: 0; font-size: 0.8125rem; font-weight: 600; color: var(--ink); }
+.trio .chart { margin-top: 6px; min-height: 160px; }
+
+/* tables */
+.tbl { overflow-x: auto; margin-top: 14px; }
+.tbl table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 560px; }
+.tbl th {
+  text-align: right; font-weight: 500; font-size: 0.75rem; color: var(--muted); padding: 6px 10px 8px;
+  border-bottom: 1px solid var(--axis); white-space: nowrap; vertical-align: bottom;
+}
+.tbl th:first-child, .tbl td:first-child { text-align: left; padding-left: 0; }
+.tbl td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--grid); font-family: var(--font-mono); font-size: 0.8125rem; font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; }
+.tbl td:first-child { font-family: var(--font-body); font-size: 0.875rem; color: var(--ink); }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td.best { color: var(--ink); font-weight: 600; }
+.tbl .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 9px; vertical-align: 0; }
+.tbl .up { color: var(--ink); }
+
+/* finding callout */
+.aside {
+  margin-top: 22px; padding: 16px 18px; border-radius: 10px; background: var(--accent-wash);
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; align-items: baseline;
+}
+.aside .tag { font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 500; }
+.aside p { margin: 0; font-size: 0.9375rem; color: var(--ink); max-width: 60em; }
+.aside code { font-family: var(--font-mono); font-size: 0.85em; background: var(--surface); padding: 1px 5px; border-radius: 4px; }
+
+/* feature chips */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+.chips li {
+  font-family: var(--font-mono); font-size: 0.75rem; padding: 3px 8px; border-radius: 5px;
+  background: var(--page); border: 1px solid var(--rule); color: var(--ink);
+}
+.chips li i { font-style: normal; color: var(--muted); margin-right: 6px; }
+
+/* duplicates */
+.seg { display: flex; gap: 2px; height: 28px; margin-top: 16px; }
+.seg div { border-radius: 4px; min-width: 0; }
+.seg .a { background: var(--cell-a); }
+.seg .b { background: var(--accent); }
+.legend .sqk { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.dupe-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 22px; }
+.pair { border-top: 1px solid var(--rule); padding-top: 12px; }
+.pair .lab { font-size: 0.8125rem; color: var(--muted); }
+.pair .vals { display: flex; gap: 28px; margin-top: 4px; flex-wrap: wrap; }
+.pair .vals div { font-family: var(--font-mono); font-size: 1.375rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+.pair .vals span { display: block; font-family: var(--font-body); font-size: 0.75rem; color: var(--muted); }
+
+/* method */
+.method { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 28px; margin: 24px 0 0; }
+.method div { border-top: 1px solid var(--rule); padding-top: 10px; min-width: 0; }
+.method dt { font-size: 0.75rem; font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.method dd { margin: 4px 0 0; font-size: 0.9375rem; color: var(--ink); }
+.links { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 30px; font-size: 0.9375rem; }
+footer { padding-block: 28px 48px; border-top: 1px solid var(--rule); font-size: 0.8125rem; color: var(--muted); }
+
+/* svg */
+svg { display: block; overflow: visible; }
+svg text { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+svg .grid { stroke: var(--grid); stroke-width: 1; }
+svg .base { stroke: var(--axis); stroke-width: 1; }
+svg .rowlab { font-family: var(--font-body); font-size: 13px; fill: var(--ink); }
+svg .rowlab.rare { font-weight: 600; }
+svg .rowsub { font-size: 10.5px; }
+svg .val { fill: var(--ink-2); font-size: 11px; }
+svg .val.strong { fill: var(--ink); font-weight: 500; }
+svg .lbl { font-family: var(--font-body); font-size: 12px; fill: var(--ink); font-weight: 500; }
+svg .lbl2 { font-size: 10.5px; fill: var(--ink-2); }
+svg .axt { font-family: var(--font-body); font-size: 11.5px; fill: var(--ink-2); }
+svg .hit { fill: transparent; cursor: default; }
+svg .hit.on, svg .hit:focus-visible { fill: var(--hover); outline: none; }
+svg .hl { stroke: var(--accent); stroke-width: 1; }
+
+#tip {
+  position: fixed; left: 0; top: 0; z-index: 20; pointer-events: none;
+  background: var(--tip-bg); color: var(--tip-ink); border-radius: 8px; padding: 9px 11px;
+  font-size: 0.8125rem; line-height: 1.45; max-width: 280px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+#tip b { display: block; font-weight: 600; margin-bottom: 3px; }
+#tip span { display: flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+#tip i { width: 8px; height: 8px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1.5px var(--tip-bg), 0 0 0 2.5px rgba(127, 127, 127, 0.4); }
+
+@media (max-width: 900px) {
+  .waffle-grid { grid-template-columns: minmax(0, 1fr); }
+  .two { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .method { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .trio { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+}
+@media (max-width: 640px) {
+  .hero { padding-block: 36px 20px; }
+  .stats { grid-template-columns: minmax(0, 1fr); }
+  .stat { padding: 16px 0 14px; }
+  .stat + .stat { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); }
+  .sec { padding-block: 48px; }
+  .fig { padding: 16px 14px 14px; border-radius: 10px; }
+  .dupe-grid { grid-template-columns: minmax(0, 1fr); }
+  .method { grid-template-columns: minmax(0, 1fr); }
+  .aside { grid-template-columns: minmax(0, 1fr); }
+  .index .mark { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="index">
+  <div class="wrap">
+    <div class="mark">CICIoT<span>2023</span></div>
+    <nav aria-label="Sections">
+      <ul>
+        <li><a href="#data">Data</a></li>
+        <li><a href="#reproduction">Reproduction</a></li>
+        <li><a href="#rebalancing">Rebalancing</a></li>
+        <li><a href="#models">Models</a></li>
+        <li><a href="#classes34">34 classes</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#duplicates">Duplicates</a></li>
+        <li><a href="#method">Method</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap" id="data">
+    <p class="eyebrow">CICIoT2023 &middot; IoT intrusion detection &middot; 8 attack categories</p>
+    <h1><span class="one">1</span> in 2,588</h1>
+    <p class="lede">In the CICIoT2023 traffic there are <strong>2,588 DDoS flows for every Brute Force flow</strong>. A detector can reach 99.5% accuracy and still miss three of every four Brute Force attacks. This project reproduces that blind spot from the base paper, then closes most of it.</p>
+    <p class="byline">Dhruv Sandilya &middot; 231CS122 &middot; NITK IoT mini project &middot; base paper: Neto et al., <i>Sensors</i> 23(13):5941, 2023</p>
+
+    <div class="waffle-grid">
+      <div class="waffle-box" id="waffle-box">
+        <canvas id="waffle" role="img" aria-label="Unit chart of 3,557 squares, one per 394 flows: 2,588 DDoS, 618 DoS, 200 Mirai, 85 Benign, 37 Spoofing, 26 Recon, 2 Web and 1 Brute Force."></canvas>
+        <div class="bf-ring" id="bf-ring" hidden></div>
+        <div class="bf-note" id="bf-note" hidden>&larr; <b>this square</b> is every Brute Force flow (394)</div>
+      </div>
+      <table class="classes">
+        <caption>Flows in the 3% sample</caption>
+        <tbody>
+          <tr><td><span class="sq" style="background:var(--cell-a)"></span>DDoS</td><td class="n">1,019,793</td><td class="n">72.77%</td></tr>
+          <tr><td><span class="sq" style="background:var(--cell-b)"></span>DoS</td><td class="n">243,434</td><td class="n">17.37%</td></tr>
+          <tr><td><span class="sq" style="background:var(--cell-a)"></span>Mirai</td><td class="n">78,728</td><td class="n">5.62%</td></tr>
+          <tr><td><span class="sq" style="background:var(--cell-b)"></span>Benign</td><td class="n">33,337</td><td class="n">2.38%</td></tr>
+          <tr><td><span class="sq" style="background:var(--cell-a)"></span>Spoofing</td><td class="n">14,522</td><td class="n">1.04%</td></tr>
+          <tr class="rare"><td><span class="sq" style="background:var(--accent)"></span>Recon</td><td class="n">10,382</td><td class="n">0.741%</td></tr>
+          <tr class="rare"><td><span class="sq" style="background:var(--accent)"></span>Web</td><td class="n">764</td><td class="n">0.055%</td></tr>
+          <tr class="rare"><td><span class="sq" style="background:var(--accent)"></span>Brute Force</td><td class="n">394</td><td class="n">0.028%</td></tr>
+          <tr class="tot"><td>Teal = rare class (under 1% of training rows)</td><td class="n"></td><td class="n"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="waffle-cap">Each square is 394 flows, the size of the whole Brute Force class. Hover a square to see its class.</p>
+    <ul class="facts">
+      <li><b>1,401,354</b> flows sampled from all <b>169</b> CSV files (3.0% of 46,686,579)</li>
+      <li><b>46</b> flow features</li>
+      <li><b>166,898</b> exact duplicates removed before splitting</li>
+      <li>test set <b>246,892</b> flows, only <b>153</b> Web and <b>79</b> Brute Force</li>
+    </ul>
+
+    <div class="stats">
+      <div class="stat"><div class="v">65<small>%</small></div><div class="k">of Brute Force flows caught by the tuned Random Forest, up from <b>24%</b>. The paper's model caught <b>6%</b>.</div></div>
+      <div class="stat"><div class="v">0.851</div><div class="k">macro-F1 with per-class decision thresholds, up from <b>0.785</b>, with no change in model size.</div></div>
+      <div class="stat"><div class="v">20<small>/46</small></div><div class="k">features are enough: macro-F1 holds while prediction gets <b>22% faster</b> and the model <b>28% smaller</b>.</div></div>
+    </div>
+  </section>
+
+  <section class="sec" id="reproduction">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="part">Part 1 &middot; Reproduction</p>
+        <h2>The paper's accuracy, and the paper's blind spot</h2>
+        <p>A Random Forest trained the way Neto et al. describe matches their accuracy on all three tasks. Accuracy hides the problem: the rare categories pull <strong>macro-F1</strong>, the average over classes, far below it.</p>
+      </div>
+
+      <div class="fig">
+        <h3>Random Forest, base paper vs this project</h3>
+        <p class="sub">Test set. Paper values from its Table 6; ours are the mean of 3 seeds.</p>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Task</th><th>Accuracy, paper</th><th>Accuracy, ours</th><th>Macro-F1, paper</th><th>Macro-F1, ours</th></tr></thead>
+            <tbody>
+              <tr><td>2 classes (attack or benign)</td><td>0.997</td><td>0.997</td><td>0.965</td><td class="best">0.970</td></tr>
+              <tr><td>8 categories</td><td>0.994</td><td>0.995</td><td>0.719</td><td class="best">0.785</td></tr>
+              <tr><td>34 attack types</td><td>0.992</td><td>0.993</td><td>0.714</td><td class="best">0.751</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="fig">
+        <h3>Recall per category, 8 classes</h3>
+        <p class="sub">Share of each category's test flows that the Random Forest labels correctly. Hover a row for exact values.</p>
+        <ul class="legend">
+          <li><span class="key" style="background:var(--s-paper)"></span>Base paper's Random Forest (its Table 8)</li>
+          <li><span class="key" style="background:var(--s-none)"></span>Our baseline</li>
+          <li><span class="key" style="background:var(--s-smote)"></span>SMOTE</li>
+          <li><span class="key" style="background:var(--s-thr)"></span>Threshold tuning</li>
+        </ul>
+        <div class="chart" id="c-recall"></div>
+        <p class="note">DDoS, DoS and Mirai are above 99.8% for every model shown and are left out.</p>
+      </div>
+
+      <div class="aside">
+        <span class="tag">Finding</span>
+        <p>The paper's Table 6 swaps precision and recall. It lists the 8-class Random Forest at recall 0.910 and precision 0.705, but its own confusion matrix (Table 8) gives <strong>recall 0.706</strong> and <strong>precision 0.917</strong>. Its example notebook calls <code>recall_score(y_pred, y_test)</code>, with the arguments in the wrong order.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="rebalancing">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="part">Part 2 &middot; Improvement</p>
+        <h2>Every rebalancing method beats the baseline</h2>
+        <p>Five ways of handling the imbalance, each applied to the training split only and compared with the baseline trained on the same seed and scored on the same test rows. For the Random Forest, all five raise macro-F1 with a paired bootstrap p below 0.05 on every seed.</p>
+        <p><strong>Threshold tuning</strong> gives the best macro-F1 without touching the training data or the model size. <strong>SMOTE</strong> catches the most rare-class flows, at a price: Web precision falls from 0.901 to 0.443, so more alerts are false.</p>
+      </div>
+
+      <div class="two">
+        <div class="fig">
+          <h3>Two goals, six methods</h3>
+          <p class="sub">Random Forest, 8 classes, mean of 3 seeds; whiskers show &plusmn;1 standard deviation across seeds.</p>
+          <div class="chart" id="c-scatter"></div>
+        </div>
+        <div class="fig">
+          <h3>What each method changes</h3>
+          <p class="sub">Change in macro-F1 against the same-seed baseline, mean of 3 seeds.</p>
+          <div class="chart" id="c-delta"></div>
+        </div>
+      </div>
+
+      <div class="fig">
+        <h3>Random Forest, 8 classes</h3>
+        <p class="sub">Rare recall is the mean recall of Recon, Web and Brute Force. p is the largest paired-bootstrap p-value of the 3 seeds.</p>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Method</th><th>Macro-F1</th><th>Rare recall</th><th>Web recall</th><th>Brute Force recall</th><th>Model size</th><th>p vs baseline</th></tr></thead>
+            <tbody>
+              <tr><td><span class="dot" style="background:var(--s-none)"></span>Baseline (no rebalancing)</td><td>0.785</td><td>0.398</td><td>15.7%</td><td>23.6%</td><td class="best">169 MB</td><td>&ndash;</td></tr>
+              <tr><td><span class="dot" style="background:var(--s-smote)"></span>SMOTE</td><td>0.837</td><td class="best">0.626</td><td class="best">43.6%</td><td>61.2%</td><td>468 MB</td><td>&lt; 0.001</td></tr>
+              <tr><td><span class="dot" style="background:var(--s-hybrid)"></span>SMOTE + undersampling</td><td>0.837</td><td class="best">0.626</td><td>42.9%</td><td>61.2%</td><td>449 MB</td><td>&lt; 0.001</td></tr>
+              <tr><td><span class="dot" style="background:var(--s-cw)"></span>Class weights</td><td>0.841</td><td>0.523</td><td>31.4%</td><td>47.7%</td><td>227 MB</td><td>&lt; 0.001</td></tr>
+              <tr><td><span class="dot" style="background:var(--s-border)"></span>Borderline-SMOTE</td><td>0.811</td><td>0.481</td><td>35.5%</td><td>26.2%</td><td>487 MB</td><td>0.013</td></tr>
+              <tr><td><span class="dot" style="background:var(--s-thr)"></span>Threshold tuning</td><td class="best">0.851</td><td>0.609</td><td>37.3%</td><td class="best">65.4%</td><td class="best">169 MB</td><td>&lt; 0.001</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="models">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="part">Part 2 &middot; Across models</p>
+        <h2>A 1.1&nbsp;MB decision tree comes close to the 169&nbsp;MB forest</h2>
+        <p>An IoT gateway has little memory to spare. With class weights, a single Decision Tree reaches macro-F1 <strong>0.841</strong> in 1.1&nbsp;MB and labels a flow in 0.11&nbsp;&micro;s. LightGBM is unstable without rebalancing (0.503 &plusmn; 0.126 across seeds) and becomes reliable with it.</p>
+      </div>
+      <div class="fig">
+        <h3>Detection quality against model size</h3>
+        <p class="sub">8 classes, mean of 3 seeds. Size is the pickled model on disk, on a log scale.</p>
+        <ul class="legend">
+          <li><span class="key ring"></span>No rebalancing</li>
+          <li><span class="key" style="background:var(--s-cw)"></span>Class weights</li>
+          <li><span class="key" style="background:var(--s-thr)"></span>Threshold tuning</li>
+          <li><span class="key" style="background:var(--s-hybrid)"></span>SMOTE + undersampling</li>
+          <li><span class="key" style="background:var(--s-none)"></span>Balanced Random Forest (balances each tree's sample)</li>
+        </ul>
+        <div class="chart" id="c-models"></div>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Model</th><th>No rebalancing</th><th>Best method</th><th>Macro-F1</th><th>Rare recall</th><th>Size</th><th>Time per flow</th></tr></thead>
+            <tbody>
+              <tr><td>Decision Tree</td><td>0.830</td><td style="text-align:right;font-family:var(--font-body)"><span class="dot" style="background:var(--s-cw)"></span>Class weights</td><td>0.841</td><td>0.680</td><td class="best">1.1 MB</td><td class="best">0.11 &micro;s</td></tr>
+              <tr><td>Random Forest</td><td>0.785</td><td style="text-align:right;font-family:var(--font-body)"><span class="dot" style="background:var(--s-thr)"></span>Threshold tuning</td><td class="best">0.851</td><td>0.609</td><td>169 MB</td><td>4.0 &micro;s</td></tr>
+              <tr><td>LightGBM</td><td>0.503 &plusmn; 0.126</td><td style="text-align:right;font-family:var(--font-body)"><span class="dot" style="background:var(--s-hybrid)"></span>SMOTE + undersampling</td><td>0.833</td><td>0.700</td><td>5.6 MB</td><td>21.7 &micro;s</td></tr>
+              <tr><td>Balanced Random Forest</td><td>&ndash;</td><td style="text-align:right;font-family:var(--font-body)">built in</td><td>0.705</td><td class="best">0.771</td><td>29.7 MB</td><td>3.0 &micro;s</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Balanced Random Forest catches the most rare flows but raises so many false alarms on them that its macro-F1 is the lowest.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="classes34">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="part">Part 2 &middot; 34 attack types</p>
+        <h2>Four attack types the baseline never catches</h2>
+        <p>At the finest level the baseline Random Forest labels none of the test flows of four attack types correctly. SMOTE finds some of each and lifts macro-F1 from <strong>0.751 to 0.807</strong>, with rare-class recall from 0.526 to 0.650.</p>
+      </div>
+      <div class="fig">
+        <h3>Recall with SMOTE for the four types the baseline misses completely</h3>
+        <p class="sub">Random Forest, 34 classes, seed 0. The baseline's recall is 0% for all four. Labels are the dataset's own class names.</p>
+        <div class="chart" id="c-missed"></div>
+        <p class="note">These classes have between 8 and 33 test flows, so one flow moves recall by 3 to 12.5 points.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="part">Part 3 &middot; Extension</p>
+        <h2>20 features do the work of 46</h2>
+        <p>Features ranked by mutual information on the training split, then the tuned Random Forest retrained on the top <i>k</i>. At 20 features macro-F1 is <strong>0.856</strong> (0.851 with all 46), prediction takes <strong>3.1 instead of 4.0&nbsp;&micro;s</strong> per flow and the model shrinks from 169 to 121&nbsp;MB. Inter-arrival time (<span class="mono">IAT</span>) ranks first under mutual information, forest importance and RFE alike.</p>
+      </div>
+      <div class="fig">
+        <h3>Random Forest with threshold tuning, by number of features</h3>
+        <p class="sub">8 classes, mean of 3 seeds. The teal line marks 20 features. Each panel has its own axis.</p>
+        <div class="trio">
+          <div><h4>Macro-F1</h4><div class="chart" id="c-sweep-f1"></div></div>
+          <div><h4>Prediction time (&micro;s per flow)</h4><div class="chart" id="c-sweep-lat"></div></div>
+          <div><h4>Model size (MB)</h4><div class="chart" id="c-sweep-mb"></div></div>
+        </div>
+        <p class="note" style="margin-top:18px">The 20 features kept, in mutual-information order (column names as spelled in the dataset):</p>
+        <ul class="chips" id="chips"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="duplicates">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="part">Data hygiene</p>
+        <h2>One test flow in six was already in the training data</h2>
+        <p>CICIoT2023 contains many exact duplicate rows. Split without removing them, <strong>15.9% of test flows (44,441)</strong> have an identical copy in the training split, so part of the test measures memory rather than detection. Every result on this page uses the de-duplicated split.</p>
+      </div>
+      <div class="fig">
+        <h3>Test split built without de-duplication</h3>
+        <p class="sub">280,271 test flows, split by whether an identical row exists in the training data.</p>
+        <div class="seg" role="img" aria-label="84.1% of test flows have no copy in training; 15.9% have an exact copy.">
+          <div class="a" style="flex:84.1"></div>
+          <div class="b" style="flex:15.9"></div>
+        </div>
+        <ul class="legend">
+          <li><span class="sqk" style="background:var(--cell-a)"></span>84.1% have no copy in the training data</li>
+          <li><span class="sqk" style="background:var(--accent)"></span>15.9% (44,441) have an exact copy</li>
+        </ul>
+        <div class="dupe-grid">
+          <div class="pair">
+            <div class="lab">Random Forest accuracy</div>
+            <div class="vals"><div>0.9953<span>duplicates kept</span></div><div>0.9947<span>duplicates removed</span></div></div>
+          </div>
+          <div class="pair">
+            <div class="lab">Random Forest macro-F1</div>
+            <div class="vals"><div>0.768<span>duplicates kept</span></div><div>0.785<span>duplicates removed</span></div></div>
+          </div>
+        </div>
+        <p class="note">Copies flatter accuracy, which the common classes dominate, and leave the rare-class problem untouched. Duplicates-kept values are from one seed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="method">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="part">How the numbers were made</p>
+        <h2>One frozen split, three seeds, paired tests</h2>
+      </div>
+      <dl class="method">
+        <div><dt>Runs</dt><dd>123 training runs in 2.7 hours on a Kaggle CPU</dd></div>
+        <div><dt>Split</dt><dd>Test 20%, then validation 10% of the rest, stratified on all 34 classes and never resampled</dd></div>
+        <div><dt>Rebalancing</dt><dd>Training split only; SMOTE raises each rare class to 50,000 rows</dd></div>
+        <div><dt>Thresholds</dt><dd>Per-class decision weights tuned on the validation split</dd></div>
+        <div><dt>Significance</dt><dd>Paired bootstrap (1,000 resamples) and McNemar test against the same-seed baseline</dd></div>
+        <div><dt>Models</dt><dd>Decision Tree, Random Forest (100 trees), LightGBM (100 rounds), Balanced Random Forest</dd></div>
+      </dl>
+      <div class="links">
+        <a href="https://github.com/Dhruvsandilya0711/IoT_Mini_Project" target="_blank" rel="noopener">Code, report and slides on GitHub</a>
+        <a href="https://doi.org/10.3390/s23135941" target="_blank" rel="noopener">Base paper (Neto et al., 2023)</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Addressing Class Imbalance in CICIoT2023-Based Intrusion Detection via SMOTE and Feature Selection &middot; Dhruv Sandilya, NITK</div>
+</footer>
+
+<div id="tip" role="tooltip" hidden></div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ---------- data (from results/ in the repository) ---------- */
+  const SERIES = {
+    paper: { name: "Base paper's RF", v: "--s-paper" },
+    none: { name: "Baseline", v: "--s-none" },
+    smote: { name: "SMOTE", v: "--s-smote" },
+    hybrid: { name: "SMOTE + undersampling", v: "--s-hybrid" },
+    classweight: { name: "Class weights", v: "--s-cw" },
+    borderline: { name: "Borderline-SMOTE", v: "--s-border" },
+    threshold: { name: "Threshold tuning", v: "--s-thr" },
+  };
+  const CLASSES = [
+    { c: "DDoS", n: 1019793, share: "72.77%", cells: 2588, tone: "a" },
+    { c: "DoS", n: 243434, share: "17.37%", cells: 618, tone: "b" },
+    { c: "Mirai", n: 78728, share: "5.62%", cells: 200, tone: "a" },
+    { c: "Benign", n: 33337, share: "2.38%", cells: 85, tone: "b" },
+    { c: "Spoofing", n: 14522, share: "1.04%", cells: 37, tone: "a" },
+    { c: "Recon", n: 10382, share: "0.741%", cells: 26, tone: "r" },
+    { c: "Web", n: 764, share: "0.055%", cells: 2, tone: "r" },
+    { c: "Brute Force", n: 394, share: "0.028%", cells: 1, tone: "r" },
+  ];
+  // Paper recall from its Table 8 confusion matrix; ours = mean of 3 seeds.
+  const RECALL = [
+    { c: "Benign", n: 6667, paper: 0.9655, none: 0.973, smote: 0.935, threshold: 0.984 },
+    { c: "Spoofing", n: 2904, paper: 0.8198, none: 0.838, smote: 0.848, threshold: 0.780 },
+    { c: "Recon", n: 2076, paper: 0.7632, none: 0.801, smote: 0.830, threshold: 0.800, rare: true },
+    { c: "Web", n: 153, paper: 0.0423, none: 0.157, smote: 0.436, threshold: 0.373, rare: true },
+    { c: "Brute Force", n: 79, paper: 0.0567, none: 0.236, smote: 0.612, threshold: 0.654, rare: true },
+  ];
+  const STRAT = [
+    { k: "none", f1: 0.7852, f1s: 0.0063, rr: 0.3979, rrs: 0.0125, size: 169, pos: "r" },
+    { k: "borderline", f1: 0.8113, f1s: 0.0020, rr: 0.4815, rrs: 0.0054, size: 487, pos: "r" },
+    { k: "classweight", f1: 0.8412, f1s: 0.0068, rr: 0.5229, rrs: 0.0192, size: 227, pos: "l" },
+    { k: "threshold", f1: 0.8508, f1s: 0.0021, rr: 0.6090, rrs: 0.0091, size: 169, pos: "tl" },
+    { k: "hybrid", f1: 0.8366, f1s: 0.0014, rr: 0.6261, rrs: 0.0088, size: 449, pos: "b2" },
+    { k: "smote", f1: 0.8371, f1s: 0.0025, rr: 0.6258, rrs: 0.0061, size: 468, pos: "b1" },
+  ];
+  const DELTA = [ // mean delta macro-F1 vs same-seed baseline, with the lowest and highest 95% CI bound over seeds
+    { k: "threshold", d: 0.0656, lo: 0.0422, hi: 0.0897 },
+    { k: "classweight", d: 0.0559, lo: 0.0250, hi: 0.0812 },
+    { k: "smote", d: 0.0519, lo: 0.0272, hi: 0.0771 },
+    { k: "hybrid", d: 0.0514, lo: 0.0283, hi: 0.0809 },
+    { k: "borderline", d: 0.0261, lo: 0.0024, hi: 0.0533 },
+  ];
+  const MODELS = [
+    { m: "Decision Tree", base: { s: 0.842, f1: 0.8297 }, best: { k: "classweight", s: 1.089, f1: 0.8411 }, lat: 0.11 },
+    { m: "LightGBM", base: { s: 5.519, f1: 0.5030, sd: 0.1263 }, best: { k: "hybrid", s: 5.611, f1: 0.8333 }, lat: 21.7 },
+    { m: "Balanced RF", only: { k: "none", s: 29.66, f1: 0.7046 }, lat: 2.97 },
+    { m: "Random Forest", base: { s: 168.83, f1: 0.7852 }, best: { k: "threshold", s: 168.83, f1: 0.8508 }, lat: 4.02 },
+  ];
+  const MISSED = [
+    { c: "Uploading_Attack", n: 8, smote: 0.500, threshold: 0.125, classweight: 0.500 },
+    { c: "SqlInjection", n: 33, smote: 0.242, threshold: 0.303, classweight: 0.030 },
+    { c: "Backdoor_Malware", n: 20, smote: 0.200, threshold: 0.100, classweight: 0.100 },
+    { c: "Recon-PingSweep", n: 15, smote: 0.133, threshold: 0.067, classweight: 0.000 },
+  ];
+  const SWEEP = [
+    { k: 5, f1: 0.8370, lat: 2.159, mb: 145.6 },
+    { k: 10, f1: 0.8408, lat: 2.582, mb: 133.8 },
+    { k: 15, f1: 0.8456, lat: 3.108, mb: 139.3 },
+    { k: 20, f1: 0.8559, lat: 3.122, mb: 120.8 },
+    { k: 30, f1: 0.8558, lat: 3.559, mb: 134.3 },
+    { k: 46, f1: 0.8508, lat: 4.020, mb: 168.8 },
+  ];
+  const FEATURES = ["IAT", "Tot size", "Max", "Magnitue", "AVG", "Tot sum", "Min", "Header_Length", "Protocol Type", "Std",
+    "Radius", "flow_duration", "Covariance", "rst_count", "Variance", "Number", "Weight", "urg_count", "Duration", "Srate"];
+
+  /* ---------- helpers ---------- */
+  const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
+  const f3 = v => v.toFixed(3);
+  const int = v => v.toLocaleString("en-US");
+  const esc = s => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  const col = k => `var(${SERIES[k].v})`;
+  const lin = (d0, d1, r0, r1) => v => r0 + (v - d0) / (d1 - d0) * (r1 - r0);
+  const logS = (d0, d1, r0, r1) => v => r0 + (Math.log10(v) - Math.log10(d0)) / (Math.log10(d1) - Math.log10(d0)) * (r1 - r0);
+  const svg = (w, h, label, body) =>
+    `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(label)}">${body}</svg>`;
+  const dot = (x, y, k, r = 5.5, hollow = false) => hollow
+    ? `<circle cx="${x}" cy="${y}" r="${r}" style="fill:var(--surface);stroke:${col(k)};stroke-width:2.25"/>`
+    : `<circle cx="${x}" cy="${y}" r="${r}" style="fill:${col(k)};stroke:var(--surface);stroke-width:2"/>`;
+  // tooltip text: "Title|key::line|plain line"
+  const tipAttr = (title, lines, aria) =>
+    ` data-tip="${esc([title, ...lines].join("|"))}" tabindex="0" aria-label="${esc(aria || [title, ...lines.map(l => l.replace(/^\w+::/, ""))].join(", "))}"`;
+
+  /* ---------- waffle (canvas) ---------- */
+  const wBox = document.getElementById("waffle-box");
+  const canvas = document.getElementById("waffle");
+  const ring = document.getElementById("bf-ring");
+  const note = document.getElementById("bf-note");
+  let wGeo = null;
+  const cellClass = [];
+  CLASSES.forEach((c, ci) => { for (let i = 0; i < c.cells; i++) cellClass.push(ci); });
+
+  function drawWaffle() {
+    const W = Math.floor(wBox.clientWidth);
+    if (!W) return;
+    const size = W >= 700 ? 7 : W >= 480 ? 6 : 4;
+    const gap = W >= 480 ? 2 : 1;
+    const pitch = size + gap;
+    const cols = Math.floor((W + gap) / pitch);
+    const total = cellClass.length;
+    const rows = Math.ceil(total / cols);
+    const H = rows * pitch - gap;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.height = H + "px";
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cs = getComputedStyle(document.documentElement);
+    const tone = { a: cs.getPropertyValue("--cell-a").trim(), b: cs.getPropertyValue("--cell-b").trim(), r: cs.getPropertyValue("--accent").trim() };
+    ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < total; i++) {
+      const r = Math.floor(i / cols), c = i % cols;
+      ctx.fillStyle = tone[CLASSES[cellClass[i]].tone];
+      ctx.fillRect(c * pitch, r * pitch, size, size);
+    }
+    // in-place labels for the two blocks big enough to hold one
+    const surface = cs.getPropertyValue("--surface").trim();
+    const ink = cs.getPropertyValue("--ink").trim();
+    ctx.font = `500 ${W >= 480 ? 12 : 11}px "IBM Plex Mono", ui-monospace, monospace`;
+    ctx.textBaseline = "middle";
+    let start = 0;
+    CLASSES.forEach((c, ci) => {
+      if (ci < 2) {
+        const firstFull = Math.ceil(start / cols);
+        const lastFull = Math.floor((start + c.cells) / cols) - 1;
+        if (lastFull - firstFull >= 3) {
+          const label = `${c.c} ${c.share}`;
+          const tw = ctx.measureText(label).width;
+          const y = (firstFull + 1) * pitch + pitch;
+          ctx.fillStyle = surface;
+          roundRect(ctx, pitch - 2, y - 10, tw + 14, 20, 4);
+          ctx.fill();
+          ctx.fillStyle = ink;
+          ctx.fillText(label, pitch + 5, y);
+        }
+      }
+      start += c.cells;
+    });
+    wGeo = { cols, pitch, size, total };
+    // ring + note on the single Brute Force square
+    const last = total - 1;
+    const lr = Math.floor(last / cols), lc = last % cols;
+    const cx = lc * pitch + size / 2, cy = lr * pitch + size / 2;
+    const d = size + 8;
+    ring.style.width = d + "px"; ring.style.height = d + "px";
+    ring.style.left = (cx - d / 2) + "px"; ring.style.top = (cy - d / 2) + "px";
+    ring.hidden = false;
+    note.hidden = false;
+    const room = W - (lc + 1) * pitch - 14;
+    const nw = note.offsetWidth;
+    if (room >= nw) {
+      note.style.left = ((lc + 1) * pitch + 12) + "px";
+      note.style.top = (cy - note.offsetHeight / 2) + "px";
+      note.innerHTML = "&larr; <b>this square</b> is every Brute Force flow (394)";
+    } else {
+      note.innerHTML = "&uarr; <b>the ringed square</b> is every Brute Force flow (394)";
+      note.style.left = Math.max(0, Math.min(W - note.offsetWidth, cx - 12)) + "px";
+      note.style.top = (H + 10) + "px";
+    }
+    wBox.style.paddingBottom = room >= nw ? "0px" : "26px";
+  }
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  canvas.addEventListener("pointermove", e => {
+    if (!wGeo) return;
+    const rect = canvas.getBoundingClientRect();
+    const c = Math.floor((e.clientX - rect.left) / wGeo.pitch), r = Math.floor((e.clientY - rect.top) / wGeo.pitch);
+    const i = r * wGeo.cols + c;
+    if (c < 0 || c >= wGeo.cols || i < 0 || i >= wGeo.total) { hideTip(); return; }
+    const k = CLASSES[cellClass[i]];
+    showTip(`${k.c}|${int(k.n)} flows, ${k.share} of the sample|${k.cells.toLocaleString("en-US")} square${k.cells > 1 ? "s" : ""} of 394 flows`, e.clientX, e.clientY);
+  });
+  canvas.addEventListener("pointerleave", hideTip);
+
+  /* ---------- chart: recall per class (dot plot) ---------- */
+  function recallChart(host) {
+    const W = host.clientWidth, narrow = W < 520;
+    const L = narrow ? 92 : 150, R = 14, T = 4, rowH = narrow ? 56 : 58, B = 26;
+    const H = T + RECALL.length * rowH + B;
+    const x = lin(0, 1, L, W - R);
+    let s = "";
+    [0, 0.25, 0.5, 0.75, 1].forEach(t => {
+      s += `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="${T}" y2="${H - B}"/>`;
+      s += `<text x="${x(t)}" y="${H - 6}" text-anchor="${t === 1 ? "end" : t === 0 ? "start" : "middle"}">${t * 100}%</text>`;
+    });
+    const keys = ["paper", "none", "smote", "threshold"];
+    RECALL.forEach((r, i) => {
+      const y0 = T + i * rowH, cy = y0 + rowH / 2;
+      const lines = keys.map(k => `${k}::${SERIES[k].name}: ${pct(r[k])}`);
+      s += `<rect class="hit" x="0" y="${y0}" width="${W}" height="${rowH}" rx="6"${tipAttr(`${r.c} (${int(r.n)} test flows)`, lines)}/>`;
+      s += `<text class="rowlab${r.rare ? " rare" : ""}" x="0" y="${cy - 3}" pointer-events="none">${r.c}</text>`;
+      s += `<text class="rowsub" x="0" y="${cy + 12}" pointer-events="none">${int(r.n)} test flows</text>`;
+      const vals = keys.map(k => r[k]);
+      s += `<line x1="${x(Math.min(...vals))}" x2="${x(Math.max(...vals))}" y1="${cy}" y2="${cy}" style="stroke:var(--axis);stroke-width:2;stroke-linecap:round" pointer-events="none"/>`;
+      keys.forEach(k => { s += `<g pointer-events="none">${dot(x(r[k]), cy, k)}</g>`; });
+      if (r.c === "Web" || r.c === "Brute Force") {
+        const sorted = keys.map(k => [k, r[k]]).sort((a, b) => a[1] - b[1]);
+        let prev = -1;
+        sorted.forEach(([k, v], j) => {
+          const above = prev >= 0 && v - prev < 0.07 && j === sorted.length - 1;
+          const strong = k === "threshold" || k === "paper";
+          s += `<text class="val${strong ? " strong" : ""}" x="${x(v)}" y="${above ? cy - 11 : cy + 19}" text-anchor="middle" pointer-events="none">${Math.round(v * 100)}%</text>`;
+          prev = v;
+        });
+      }
+    });
+    host.innerHTML = svg(W, H, "Recall per category for the paper's Random Forest, our baseline, SMOTE and threshold tuning", s);
+  }
+
+  /* ---------- chart: macro-F1 vs rare recall (scatter) ---------- */
+  function scatterChart(host) {
+    const W = host.clientWidth;
+    const H = Math.round(Math.max(270, Math.min(360, W * 0.68)));
+    const L = 44, R = 12, T = 22, B = 42;
+    const x = lin(0.35, 0.70, L, W - R), y = lin(0.77, 0.865, H - B, T);
+    let s = "";
+    [0.78, 0.80, 0.82, 0.84, 0.86].forEach(t => {
+      s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/>`;
+      s += `<text x="${L - 8}" y="${y(t) + 4}" text-anchor="end">${t.toFixed(2)}</text>`;
+    });
+    [0.4, 0.5, 0.6, 0.7].forEach(t => {
+      s += `<text x="${x(t)}" y="${H - B + 18}" text-anchor="${t === 0.7 ? "end" : "middle"}">${t * 100}%</text>`;
+    });
+    s += `<line class="base" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>`;
+    s += `<text class="axt" x="0" y="${T - 10}">Macro-F1</text>`;
+    s += `<text class="axt" x="${W - R}" y="${H - 6}" text-anchor="end">Rare-class recall (Recon, Web, Brute Force) &rarr;</text>`;
+    STRAT.forEach(p => {
+      const cx = x(p.rr), cy = y(p.f1);
+      s += `<line x1="${x(p.rr - p.rrs)}" x2="${x(p.rr + p.rrs)}" y1="${cy}" y2="${cy}" style="stroke:${col(p.k)};stroke-width:1.5;opacity:.55"/>`;
+      s += `<line x1="${cx}" x2="${cx}" y1="${y(p.f1 - p.f1s)}" y2="${y(p.f1 + p.f1s)}" style="stroke:${col(p.k)};stroke-width:1.5;opacity:.55"/>`;
+    });
+    STRAT.forEach(p => { s += dot(x(p.rr), y(p.f1), p.k, 6); });
+    STRAT.forEach(p => {
+      const cx = x(p.rr), cy = y(p.f1), name = SERIES[p.k].name;
+      if (p.pos === "r") s += `<text class="lbl" x="${Math.max(cx + 11, x(p.rr + p.rrs) + 6)}" y="${cy + 4}">${name}</text>`;
+      if (p.pos === "l") s += `<text class="lbl" x="${Math.min(cx - 11, x(p.rr - p.rrs) - 6)}" y="${cy + 4}" text-anchor="end">${name}</text>`;
+      if (p.pos === "tl") s += `<text class="lbl" x="${cx + 4}" y="${cy - 12}" text-anchor="end">${name}</text>`;
+      if (p.pos === "b1") s += `<text class="lbl" x="${cx + 6}" y="${cy + 22}" text-anchor="end">${name}</text>`;
+      if (p.pos === "b2") s += `<text class="lbl" x="${cx + 6}" y="${cy + 37}" text-anchor="end">${name}</text>`;
+    });
+    // hit targets (SMOTE and SMOTE + undersampling share one point)
+    STRAT.filter(p => p.k !== "hybrid").forEach(p => {
+      const group = p.k === "smote" ? STRAT.filter(q => q.k === "smote" || q.k === "hybrid") : [p];
+      const lines = group.flatMap(q => [`${q.k}::${SERIES[q.k].name}`, `macro-F1 ${f3(q.f1)} · rare recall ${f3(q.rr)}`, `model size ${q.size} MB`]);
+      s += `<circle class="hit" cx="${x(p.rr)}" cy="${y(p.f1)}" r="16"${tipAttr(p.k === "smote" ? "Two methods, one point" : SERIES[p.k].name, p.k === "smote" ? lines : lines.slice(1))}/>`;
+    });
+    host.innerHTML = svg(W, H, "Macro-F1 against rare-class recall for six methods", s);
+  }
+
+  /* ---------- chart: delta macro-F1 (bars with CI) ---------- */
+  function deltaChart(host) {
+    const W = host.clientWidth;
+    const L = Math.min(170, Math.max(124, W * 0.36)), R = 46, T = 4, rowH = 44, B = 26;
+    const H = T + DELTA.length * rowH + B;
+    const x = lin(0, 0.10, L, W - R);
+    let s = "";
+    [0, 0.02, 0.04, 0.06, 0.08, 0.10].forEach(t => {
+      s += `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="${T}" y2="${H - B}"/>`;
+      if (W > 380 || t * 100 % 4 === 0) s += `<text x="${x(t)}" y="${H - 6}" text-anchor="middle">${t === 0 ? "0" : "+" + t.toFixed(2)}</text>`;
+    });
+    DELTA.forEach((d, i) => {
+      const y0 = T + i * rowH, cy = y0 + rowH / 2, bh = 14;
+      const x0 = x(0), x1 = x(d.d), r = 4;
+      s += `<rect class="hit" x="0" y="${y0}" width="${W}" height="${rowH}" rx="6"${tipAttr(SERIES[d.k].name, [`${d.k}::Δ macro-F1 +${f3(d.d)} (mean of 3 seeds)`, `95% CI bounds across seeds: +${f3(d.lo)} to +${f3(d.hi)}`])}/>`;
+      const nm = SERIES[d.k].name;
+      if (nm.length * 6.7 > L - 10 && nm.includes(" + ")) {
+        const [a, b] = nm.split(" + ");
+        s += `<text class="rowlab" x="0" y="${cy - 3}" pointer-events="none">${a} +</text><text class="rowlab" x="0" y="${cy + 12}" pointer-events="none">${b}</text>`;
+      } else {
+        s += `<text class="rowlab" x="0" y="${cy + 4}" pointer-events="none">${nm}</text>`;
+      }
+      s += `<path d="M${x0},${cy - bh / 2} H${x1 - r} Q${x1},${cy - bh / 2} ${x1},${cy - bh / 2 + r} V${cy + bh / 2 - r} Q${x1},${cy + bh / 2} ${x1 - r},${cy + bh / 2} H${x0} Z" style="fill:${col(d.k)}" pointer-events="none"/>`;
+      s += `<line x1="${x(d.lo)}" x2="${x(d.hi)}" y1="${cy}" y2="${cy}" style="stroke:var(--ink);stroke-width:1.25;opacity:.7" pointer-events="none"/>`;
+      s += `<line x1="${x(d.lo)}" x2="${x(d.lo)}" y1="${cy - 4}" y2="${cy + 4}" style="stroke:var(--ink);stroke-width:1.25;opacity:.7" pointer-events="none"/>`;
+      s += `<line x1="${x(d.hi)}" x2="${x(d.hi)}" y1="${cy - 4}" y2="${cy + 4}" style="stroke:var(--ink);stroke-width:1.25;opacity:.7" pointer-events="none"/>`;
+      s += `<text class="val strong" x="${Math.max(x(d.hi), x1) + 6}" y="${cy + 4}" pointer-events="none">+${d.d.toFixed(3)}</text>`;
+    });
+    s += `<line class="base" x1="${x(0)}" x2="${x(0)}" y1="${T}" y2="${H - B}"/>`;
+    host.innerHTML = svg(W, H, "Change in macro-F1 against the baseline for five methods", s) +
+      `<p class="note">Bars: mean change. Whiskers: the widest 95% bootstrap interval across the 3 seeds. None reaches zero.</p>`;
+  }
+
+  /* ---------- chart: models, size vs macro-F1 ---------- */
+  function modelChart(host) {
+    const W = host.clientWidth;
+    const H = Math.round(Math.max(300, Math.min(380, W * 0.5)));
+    const L = 44, R = 14, T = 16, B = 40;
+    const x = logS(0.5, 400, L, W - R), y = lin(0.35, 0.92, H - B, T);
+    let s = "";
+    [0.4, 0.5, 0.6, 0.7, 0.8, 0.9].forEach(t => {
+      s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/>`;
+      s += `<text x="${L - 8}" y="${y(t) + 4}" text-anchor="end">${t.toFixed(1)}</text>`;
+    });
+    [1, 10, 100].forEach(t => {
+      s += `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="${T}" y2="${H - B}"/>`;
+      s += `<text x="${x(t)}" y="${H - B + 18}" text-anchor="middle">${t} MB</text>`;
+    });
+    s += `<line class="base" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>`;
+    s += `<text class="axt" x="${W - R}" y="${H - 6}" text-anchor="end">Model size (log scale) &rarr;</text>`;
+    s += `<text class="axt" x="0" y="${T - 4}">Macro-F1</text>`;
+    const arrow = (x0, y0, x1, y1, k) => {
+      const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy);
+      if (len < 20) return "";
+      const ux = dx / len, uy = dy / len, sx = x0 + ux * 9, sy = y0 + uy * 9, ex = x1 - ux * 10, ey = y1 - uy * 10;
+      const hx = ex - ux * 7, hy = ey - uy * 7, px = -uy * 4, py = ux * 4;
+      return `<line x1="${sx}" y1="${sy}" x2="${hx}" y2="${hy}" style="stroke:${col(k)};stroke-width:2;stroke-linecap:round"/>` +
+        `<path d="M${ex},${ey} L${hx + px},${hy + py} L${hx - px},${hy - py} Z" style="fill:${col(k)}"/>`;
+    };
+    MODELS.forEach(m => {
+      if (m.only) {
+        const cx = x(m.only.s), cy = y(m.only.f1);
+        s += dot(cx, cy, "none", 6);
+        s += `<text class="lbl" x="${cx + 11}" y="${cy + 4}">${m.m}</text><text class="lbl2" x="${cx + 11}" y="${cy + 18}">${f3(m.only.f1)}</text>`;
+        s += `<circle class="hit" cx="${cx}" cy="${cy}" r="16"${tipAttr("Balanced Random Forest", [`none::macro-F1 ${f3(m.only.f1)}`, "rare recall 0.771 (highest)", `${m.only.s} MB · ${m.lat} µs per flow`])}/>`;
+        return;
+      }
+      const bx = x(m.base.s), by = y(m.base.f1), ax = x(m.best.s), ay = y(m.best.f1);
+      if (m.base.sd) {
+        s += `<line x1="${bx}" x2="${bx}" y1="${y(m.base.f1 - m.base.sd)}" y2="${y(m.base.f1 + m.base.sd)}" style="stroke:var(--s-none);stroke-width:1.5;opacity:.55"/>`;
+        s += `<line x1="${bx - 4}" x2="${bx + 4}" y1="${y(m.base.f1 - m.base.sd)}" y2="${y(m.base.f1 - m.base.sd)}" style="stroke:var(--s-none);stroke-width:1.5;opacity:.55"/>`;
+        s += `<line x1="${bx - 4}" x2="${bx + 4}" y1="${y(m.base.f1 + m.base.sd)}" y2="${y(m.base.f1 + m.base.sd)}" style="stroke:var(--s-none);stroke-width:1.5;opacity:.55"/>`;
+      }
+      s += arrow(bx, by, ax, ay, m.best.k);
+      s += dot(bx, by, "none", 5.5, true);
+      s += dot(ax, ay, m.best.k, 6);
+      const vals = `${f3(m.base.f1)} → ${f3(m.best.f1)}`;
+      if (m.m === "Decision Tree") {
+        s += `<text class="lbl" x="${bx - 6}" y="${ay - 28}">${m.m}</text><text class="lbl2" x="${bx - 6}" y="${ay - 14}">${vals}</text>`;
+      } else if (m.m === "LightGBM") {
+        const my = y(0.58);
+        s += `<text class="lbl" x="${bx + 12}" y="${my}">${m.m}</text><text class="lbl2" x="${bx + 12}" y="${my + 14}">${vals}</text>`;
+      } else {
+        const my = (by + ay) / 2;
+        s += `<text class="lbl" x="${bx - 12}" y="${my}" text-anchor="end">${m.m}</text><text class="lbl2" x="${bx - 12}" y="${my + 14}" text-anchor="end">${vals}</text>`;
+      }
+      const lines = [
+        `none::No rebalancing: ${f3(m.base.f1)}${m.base.sd ? " ± " + f3(m.base.sd) : ""} · ${m.base.s.toFixed(m.base.s < 10 ? 2 : 0)} MB`,
+        `${m.best.k}::${SERIES[m.best.k].name}: ${f3(m.best.f1)} · ${m.best.s.toFixed(m.best.s < 10 ? 2 : 0)} MB`,
+        `${m.lat} µs per flow`,
+      ];
+      const top = Math.min(by, ay), bot = Math.max(by, ay);
+      s += `<rect class="hit" x="${Math.min(bx, ax) - 16}" y="${top - 16}" width="${Math.abs(ax - bx) + 32}" height="${bot - top + 32}" rx="14"${tipAttr(m.m, lines)}/>`;
+    });
+    host.innerHTML = svg(W, H, "Macro-F1 against model size for four models before and after rebalancing", s);
+  }
+
+  /* ---------- chart: 34-class types missed by the baseline ---------- */
+  function missedChart(host) {
+    const W = host.clientWidth, narrow = W < 520;
+    const L = narrow ? 128 : 170, R = 40, T = 4, rowH = 46, B = 26;
+    const H = T + MISSED.length * rowH + B;
+    const x = lin(0, 1, L, W - R);
+    let s = "";
+    [0, 0.25, 0.5, 0.75, 1].forEach(t => {
+      s += `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="${T}" y2="${H - B}"/>`;
+      s += `<text x="${x(t)}" y="${H - 6}" text-anchor="middle">${t * 100}%</text>`;
+    });
+    MISSED.forEach((m, i) => {
+      const y0 = T + i * rowH, cy = y0 + rowH / 2, bh = 14, x0 = x(0), x1 = x(m.smote), r = 4;
+      s += `<rect class="hit" x="0" y="${y0}" width="${W}" height="${rowH}" rx="6"${tipAttr(`${m.c} (${m.n} test flows)`, [
+        `none::Baseline: 0.0%`, `smote::SMOTE: ${pct(m.smote)}`, `threshold::Threshold tuning: ${pct(m.threshold)}`, `classweight::Class weights: ${pct(m.classweight)}`])}/>`;
+      s += `<text class="rowlab" x="0" y="${cy - 2}" style="font-family:var(--font-mono);font-size:${narrow ? 11 : 12.5}px" pointer-events="none">${m.c}</text>`;
+      s += `<text class="rowsub" x="0" y="${cy + 13}" pointer-events="none">${m.n} test flows</text>`;
+      s += `<path d="M${x0},${cy - bh / 2} H${x1 - r} Q${x1},${cy - bh / 2} ${x1},${cy - bh / 2 + r} V${cy + bh / 2 - r} Q${x1},${cy + bh / 2} ${x1 - r},${cy + bh / 2} H${x0} Z" style="fill:var(--s-smote)" pointer-events="none"/>`;
+      s += `<text class="val strong" x="${x1 + 6}" y="${cy + 4}" pointer-events="none">${Math.round(m.smote * 100)}%</text>`;
+    });
+    s += `<line class="base" x1="${x(0)}" x2="${x(0)}" y1="${T}" y2="${H - B}"/>`;
+    host.innerHTML = svg(W, H, "Recall with SMOTE for four attack types the baseline never detects", s);
+  }
+
+  /* ---------- chart: feature sweep small multiples ---------- */
+  function sweepChart(host, key, dom, ticks, fmt) {
+    const W = host.clientWidth, H = 168;
+    const L = 40, R = 12, T = 20, B = 26;
+    const x = lin(0, 48, L, W - R), y = lin(dom[0], dom[1], H - B, T);
+    let s = "";
+    ticks.forEach(t => {
+      s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/>`;
+      s += `<text x="${L - 7}" y="${y(t) + 4}" text-anchor="end">${fmt(t, true)}</text>`;
+    });
+    [5, 10, 20, 30, 46].forEach(t => { s += `<text x="${x(t)}" y="${H - 6}" text-anchor="middle">${t}</text>`; });
+    s += `<line class="base" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>`;
+    s += `<line class="hl" x1="${x(20)}" x2="${x(20)}" y1="${T - 6}" y2="${H - B}"/>`;
+    const pts = SWEEP.map(p => [x(p.k), y(p[key])]);
+    s += `<path d="M${pts.map(p => p.join(",")).join(" L")}" style="fill:none;stroke:var(--s-thr);stroke-width:2;stroke-linejoin:round;stroke-linecap:round"/>`;
+    SWEEP.forEach((p, i) => {
+      const [cx, cy] = pts[i];
+      const em = p.k === 20 || p.k === 46;
+      s += `<circle cx="${cx}" cy="${cy}" r="${em ? 4.5 : 3.5}" style="fill:var(--s-thr);stroke:var(--surface);stroke-width:2"/>`;
+      if (em) {
+        const prevY = i > 0 ? pts[i - 1][1] : -Infinity, nextY = i < pts.length - 1 ? pts[i + 1][1] : -Infinity;
+        const below = cy > prevY && cy > nextY;
+        s += `<text class="val strong" x="${p.k === 46 ? cx + 3 : cx - 6}" y="${below ? cy + 17 : cy - 9}" text-anchor="end">${fmt(p[key])}</text>`;
+      }
+    });
+    SWEEP.forEach((p, i) => {
+      const left = i === 0 ? L : (pts[i - 1][0] + pts[i][0]) / 2;
+      const right = i === SWEEP.length - 1 ? W - R : (pts[i][0] + pts[i + 1][0]) / 2;
+      s += `<rect class="hit" x="${left}" y="${T}" width="${right - left}" height="${H - B - T}"${tipAttr(`${p.k} features`, [
+        `threshold::macro-F1 ${f3(p.f1)}`, `${p.lat.toFixed(2)} µs per flow`, `${p.mb.toFixed(0)} MB`])}/>`;
+    });
+    host.innerHTML = svg(W, H, `${key} by number of features`, s);
+  }
+
+  /* ---------- tooltip ---------- */
+  const tip = document.getElementById("tip");
+  let active = null;
+  function renderTip(str) {
+    const [title, ...lines] = str.split("|");
+    return `<b>${esc(title)}</b>` + lines.map(l => {
+      const m = l.match(/^(\w+)::(.*)$/);
+      return m ? `<span><i style="background:${col(m[1])}"></i>${esc(m[2])}</span>` : `<span>${esc(l)}</span>`;
+    }).join("");
+  }
+  function showTip(str, cx, cy) {
+    tip.innerHTML = renderTip(str);
+    tip.hidden = false;
+    const r = tip.getBoundingClientRect();
+    let x = cx + 14, y = cy + 16;
+    if (x + r.width > window.innerWidth - 8) x = cx - r.width - 14;
+    if (x < 8) x = 8;
+    if (y + r.height > window.innerHeight - 8) y = cy - r.height - 14;
+    if (y < 8) y = 8;
+    tip.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+  }
+  function hideTip() {
+    tip.hidden = true;
+    if (active) { active.classList.remove("on"); active = null; }
+  }
+  function activate(t) {
+    if (active && active !== t) active.classList.remove("on");
+    active = t; t.classList.add("on");
+  }
+  document.addEventListener("pointermove", e => {
+    if (e.target === canvas) return;
+    const t = e.target.closest ? e.target.closest("[data-tip]") : null;
+    if (!t) { if (e.pointerType === "mouse") hideTip(); return; }
+    activate(t); showTip(t.dataset.tip, e.clientX, e.clientY);
+  });
+  document.addEventListener("pointerdown", e => {
+    if (e.target === canvas) return;
+    const t = e.target.closest ? e.target.closest("[data-tip]") : null;
+    if (!t) { hideTip(); return; }
+    activate(t); showTip(t.dataset.tip, e.clientX, e.clientY);
+  });
+  document.addEventListener("focusin", e => {
+    const t = e.target.closest ? e.target.closest("[data-tip]") : null;
+    if (!t) return;
+    const r = t.getBoundingClientRect();
+    activate(t); showTip(t.dataset.tip, r.left + Math.min(r.width / 2, 60), r.top + r.height / 2);
+  });
+  document.addEventListener("focusout", hideTip);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hideTip(); });
+  window.addEventListener("scroll", () => { if (!tip.hidden) hideTip(); }, { passive: true });
+
+  /* ---------- render + resize ---------- */
+  document.getElementById("chips").innerHTML = FEATURES.map((f, i) => `<li><i>${i + 1}</i>${esc(f)}</li>`).join("");
+  const jobs = [
+    ["c-recall", recallChart],
+    ["c-scatter", scatterChart],
+    ["c-delta", deltaChart],
+    ["c-models", modelChart],
+    ["c-missed", missedChart],
+    ["c-sweep-f1", h => sweepChart(h, "f1", [0.83, 0.86], [0.83, 0.84, 0.85, 0.86], v => v.toFixed(3).replace(/0$/, "") )],
+    ["c-sweep-lat", h => sweepChart(h, "lat", [0, 4.5], [0, 1, 2, 3, 4], (v, tick) => tick ? String(v) : v.toFixed(2))],
+    ["c-sweep-mb", h => sweepChart(h, "mb", [0, 180], [0, 60, 120, 180], v => v.toFixed(0))],
+  ];
+  const widths = new Map();
+  function renderAll(force) {
+    jobs.forEach(([id, fn]) => {
+      const host = document.getElementById(id);
+      const w = host.clientWidth;
+      if (force || widths.get(id) !== w) { widths.set(id, w); fn(host); }
+    });
+    drawWaffle();
+  }
+  let raf = 0;
+  const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => renderAll(false)); };
+  if ("ResizeObserver" in window) {
+    const ro = new ResizeObserver(schedule);
+    jobs.forEach(([id]) => ro.observe(document.getElementById(id)));
+    ro.observe(wBox);
+  } else {
+    window.addEventListener("resize", schedule);
+  }
+  // the waffle is drawn from theme tokens, so redraw it when the theme changes
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", drawWaffle);
+  new MutationObserver(drawWaffle).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class"] });
+  renderAll(true);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => renderAll(true));
+
+  /* ---------- index highlight ---------- */
+  const links = [...document.querySelectorAll(".index a")];
+  if ("IntersectionObserver" in window) {
+    const byId = new Map(links.map(a => [a.getAttribute("href").slice(1), a]));
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          links.forEach(a => a.classList.remove("on"));
+          const a = byId.get(en.target.id);
+          if (a) a.classList.add("on");
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px" });
+    byId.forEach((_, id) => { const sec = document.getElementById(id); if (sec) io.observe(sec); });
+  }
+})();
+</script>
+</body>
+</html>
