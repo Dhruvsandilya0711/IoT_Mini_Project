@@ -47,10 +47,11 @@ src/
   analyze.py            aggregate runs over seeds into report tables and figures
   plots.py              figure styling
 scripts/run_experiments.sh   the full experiment matrix, phase by phase
+scripts/pi_detect.py         replay flows through a saved model on a Raspberry Pi gateway
 tests/                  fake-data generator + end-to-end test
 data/                   raw and processed data (not committed, see data/README.md)
 results/                runs.csv, per-class tables, confusion matrices, figures
-docs/                   course brief, Kaggle guide, interactive results page (results.html)
+docs/                   course brief, Kaggle and Raspberry Pi guides, interactive results page (results.html)
 report/                 Phase 2 report: build_report.py -> report.html -> Phase2_Report.pdf, figures, diagrams (Graphviz)
 slides/                 Phase 1 proposal and Phase 2 results decks
 ```
@@ -99,6 +100,10 @@ Every command has `--help`. Runs already in `results/runs.csv` are skipped (use 
 ### On Kaggle (recommended)
 
 Step-by-step guide: [`docs/KAGGLE_STEPS.md`](docs/KAGGLE_STEPS.md). In a Kaggle notebook cell, `!python scripts/kaggle_run.py` (after cloning the repo) runs every phase and packs the results into `results.zip`.
+
+### On a Raspberry Pi (edge gateway demo)
+
+Train the class-weighted Decision Tree on the Pi and replay flows through it with `scripts/pi_detect.py`: [`docs/RASPBERRY_PI.md`](docs/RASPBERRY_PI.md).
 
 ### By hand on Kaggle or Colab
 
