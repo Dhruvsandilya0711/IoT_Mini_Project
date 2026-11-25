@@ -17,7 +17,7 @@ Course brief: [`docs/Mini-Projects.pdf`](docs/Mini-Projects.pdf)
 
 ## Results (Phase 2)
 
-Deliverables: **[report (PDF)](report/Mini_Project_Report.pdf)** · [final slides](slides/Phase2_Results.pptx) · [proposal slides](slides/Phase1_Proposal.pptx) · [interactive results page](docs/results.html) (download and open in a browser) · raw results in [`results/`](results/)
+Deliverables: **[report (PDF)](report/Mini_Project_Report.pdf)** · [Phase 1 slides: proposal](slides/Phase1_Proposal.pptx) · [Phase 2 slides: results and demo](slides/Phase2_Results.pptx) · [interactive results page](docs/results.html) (download and open in a browser) · raw results in [`results/`](results/)
 
 Run on the full CSV release (169 files, 3% sample = 1,401,354 flows, duplicates removed), 123 training runs, 2.7 h on a Kaggle CPU.
 
@@ -104,7 +104,7 @@ Step-by-step guide: [`docs/KAGGLE_STEPS.md`](docs/KAGGLE_STEPS.md). In a Kaggle 
 
 ### Live demo
 
-One Kaggle cell prepares a trained gateway model and real flows to replay; steps and running order in [`docs/DEMO.md`](docs/DEMO.md).
+Import [`notebooks/demo.ipynb`](notebooks/demo.ipynb) into Kaggle (File → Import Notebook): it trains the gateway model on a few CSV files and replays real flows through it, raising alerts. Steps and running order in [`docs/DEMO.md`](docs/DEMO.md).
 
 ### By hand on Kaggle or Colab
 

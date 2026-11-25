@@ -7,14 +7,14 @@ digraph G {
   mal [label="Malicious IoT devices", fillcolor="#F8D7CF", color="#E4572E"];
   ap [label="Access point /\nswitch"];
   tap [label="Network tap\n(or switch mirror port)", fillcolor="#FDEBD0", color="#B7791F"];
-  pi [label=<<b>Raspberry Pi 4 gateway</b><br/><font point-size="9">tcpdump capture → feature extractor<br/>→ scaler + model → alert client</font>>, fillcolor="#D7EFF1", color="#0E9AA7"];
+  gw [label=<<b>IoT gateway</b><br/><font point-size="9">tcpdump capture → feature extractor<br/>→ scaler + model → alert client</font>>, fillcolor="#D7EFF1", color="#0E9AA7"];
   router [label="Router / Internet"];
   cloud [label=<<b>Cloud VM</b><br/><font point-size="9">MQTT broker (TLS), database,<br/>dashboard, model registry,<br/>training jobs (Kaggle in this project)</font>>];
   wifi -> ap; zig -> ap [label=" via hubs"]; mal -> ap;
   ap -> router [label=" normal traffic"];
   ap -> tap [label=" copy of all traffic", style=dashed];
-  tap -> pi [style=dashed];
-  pi -> router [label=" alerts (MQTT/TLS)"];
+  tap -> gw [style=dashed];
+  gw -> router [label=" alerts (MQTT/TLS)"];
   router -> cloud;
-  cloud -> pi [label=" model updates (HTTPS)", constraint=false, style=dotted];
+  cloud -> gw [label=" model updates (HTTPS)", constraint=false, style=dotted];
 }

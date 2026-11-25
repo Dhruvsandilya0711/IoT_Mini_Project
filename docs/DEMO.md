@@ -6,7 +6,9 @@ report, which uses the full experiments.
 
 ## 1. Prepare on Kaggle (the evening before, about 10 minutes)
 
-New notebook, dataset **CICIoT2023 by CongyuanXu** attached, **Internet on**. First cell:
+Either import `notebooks/demo.ipynb` (Kaggle: **File → Import Notebook**, upload the file; do not paste its text into a
+cell) or make a new notebook with the three cells below. Attach the dataset **CICIoT2023 by CongyuanXu** and turn
+**Internet on**. First cell:
 
 ```
 import os, shutil, subprocess

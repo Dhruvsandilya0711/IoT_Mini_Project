@@ -306,7 +306,7 @@ system.</p>"""
         ["Data analysis", "Real-time inference at the gateway (edge); training, rebalancing and feature selection in the cloud."],
         ["Application deployment", "Detection on the gateway; storage, dashboard and model registry in the cloud."],
         ["Security", "Encrypted, authenticated channels (TLS) for alerts and updates; an integrity check on every model before it is installed; the IDS only sees a copy of the traffic, so the network keeps running if it fails."],
-        ["Measurable targets", "Rare-class recall and macro-F1 above the reproduced baseline (significant at p &lt; 0.05); prediction time in microseconds per flow; a model small enough for a Raspberry Pi-class gateway."],
+        ["Measurable targets", "Rare-class recall and macro-F1 above the reproduced baseline (significant at p &lt; 0.05); prediction time in microseconds per flow; a model small enough for a low-cost gateway device."],
     ]
     svc_rows = [
         ["Traffic capture", "Native (libpcap/tcpdump)", "Mirrored packets", "Packet stream", "Continuous", "Gateway"],
@@ -327,7 +327,7 @@ system.</p>"""
         ["6", "Independent end nodes sending to the cloud; central controller", "No: devices cannot run agents, and sending all traffic to the cloud adds latency"],
     ]
     op_rows = [
-        ["Device", "Raspberry Pi 4 gateway with a network tap or switch mirror port; cloud VM"],
+        ["Device", "IoT gateway (a small Linux computer or router) with a network tap or switch mirror port; cloud VM"],
         ["Communication", "MQTT broker (e.g. Mosquitto) with TLS for alerts; HTTPS for model updates and the dashboard"],
         ["Services hosting", "Capture, feature extraction and detection run natively on the gateway; storage, dashboard and registry on the cloud VM"],
         ["Storage", "Relational or time-series database for alerts; object storage for model artifacts"],
@@ -605,7 +605,7 @@ drops faster than macro-F1 as features are removed, though, so for a detector wh
 attacks, 20 features is the better choice.</p>
 {table(['k', 'RF macro-F1', 'RF rare recall', 'RF &micro;s/flow', 'RF MB', 'DT macro-F1', 'DT &micro;s/flow', 'DT MB'], sweep_rows, 'small', n.table_caption('Feature sweep, 8 classes: threshold-tuned Random Forest and class-weighted Decision Tree (mean over three seeds).'), ['center'] + ['right'] * 7)}
 {n.figure('figures/sweep_8c_rf_threshold_ranking_mi_8class.png', 'Threshold-tuned Random Forest against the number of features: detection quality, prediction time, model size and training time.')}
-<p>On a Raspberry Pi-class gateway, cost matters as much as accuracy (Figure 13). The class-weighted Decision Tree is
+<p>On a small gateway device, cost matters as much as accuracy (Figure 13). The class-weighted Decision Tree is
 the easiest model to deploy: about 1&nbsp;MB and 0.1&nbsp;&micro;s per flow with macro-F1 {f3(dt_cw.test_macro_f1)},
 compared with {rf_thr.model_size_mb:.0f}&nbsp;MB and {rf_thr.predict_us_per_flow:.1f}&nbsp;&micro;s for the best
 forest.</p>
@@ -633,12 +633,12 @@ Where an analyst checks every alert, the higher rare-class recall of SMOTE or th
 it. Where too many alerts would simply be ignored, threshold tuning strikes a better balance.</p>
 <p><b>Deployment.</b> The feature-selection results show that the 46 features overlap a lot, and 20 are enough.
 Together with the class-weighted Decision Tree, this means a gateway can run a detector of about 1&nbsp;MB that
-classifies a window in around 0.1&nbsp;&micro;s. That leaves most of a Raspberry Pi's resources for packet capture
+classifies a window in around 0.1&nbsp;&micro;s. That leaves most of the gateway's resources for packet capture
 and feature extraction, which would be the real bottlenecks in a live system.</p>
 <p><b>Limitations.</b> (1) I used a 3% sample, so the rarest 34-class types have only a handful of test rows. (2) All
 results come from one dataset recorded on one testbed, and I have not tested how well they transfer to other
 networks. (3) CICIoT2023 has no replay attacks, which project topic 4 of the course mentions. (4) Latency was
-measured as batch prediction on a Kaggle CPU, not on a Raspberry Pi, and it does not include feature extraction.
+measured as batch prediction on a Kaggle CPU, not on gateway hardware, and it does not include feature extraction.
 (5) LightGBM was run with default settings; with tuning it might do well without rebalancing. (6) The live parts of
 Section 3 (capture, MQTT, dashboard) are designed but not deployed.</p>"""
 

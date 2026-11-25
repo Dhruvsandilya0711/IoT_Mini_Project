@@ -30,13 +30,6 @@ from src.load import read_part  # noqa: E402
 BENIGN = {"Benign", "BenignTraffic"}
 
 
-def cpu_temp():
-    try:
-        return int(Path("/sys/class/thermal/thermal_zone0/temp").read_text()) / 1000
-    except (OSError, ValueError):
-        return None
-
-
 def peak_memory_mb():
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # Linux reports KiB
 
@@ -141,8 +134,7 @@ def main(argv=None):
         print(f"\n{len(idx)} flows, {alerts} alerts" + (f", {hits / len(idx):.1%} labelled correctly" if y is not None else ""))
         print(f"time per flow, scaling + prediction: median {np.median(ms):.2f} ms, 99th percentile {np.percentile(ms, 99):.2f} ms")
 
-    temp = cpu_temp()
-    print(f"peak memory {peak_memory_mb():.0f} MB" + (f", CPU {temp:.1f} °C" if temp is not None else ""))
+    print(f"peak memory {peak_memory_mb():.0f} MB")
 
 
 if __name__ == "__main__":

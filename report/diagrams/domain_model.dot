@@ -5,7 +5,7 @@ digraph G {
   user [label=<<b>User</b><br/><font point-size="9">network administrator</font>>, fillcolor="#FFFFFF"];
   pe [label=<<b>Physical entities</b><br/><font point-size="9">IoT devices (cameras, plugs, sensors,<br/>hubs, speakers); malicious IoT devices;<br/>the network traffic they exchange</font>>, fillcolor="#FDEBD0", color="#B7791F"];
   ve [label=<<b>Virtual entities</b><br/><font point-size="9">device profile, flow window,<br/>detection result, alert, model</font>>, fillcolor="#D7EFF1", color="#0E9AA7"];
-  dev [label=<<b>Devices</b><br/><font point-size="9">IoT gateway (Raspberry Pi 4) with<br/>network tap / mirror port; cloud server</font>>];
+  dev [label=<<b>Devices</b><br/><font point-size="9">IoT gateway with<br/>network tap / mirror port; cloud server</font>>];
   res [label=<<b>Resources</b><br/><font point-size="9">on-device: packet capture, feature extractor,<br/>classifier, local log<br/>network: alert store, model registry,<br/>training compute</font>>];
   svc [label=<<b>Services</b><br/><font point-size="9">monitoring, detection, alert,<br/>model update, dashboard</font>>];
   user -> svc [label="uses"];

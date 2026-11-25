@@ -9,7 +9,7 @@ digraph G {
   s5 [label=<<b>5. Service specifications</b><br/><font point-size="9">capture, detect, alert, update</font>>];
   s6 [label=<<b>6. IoT level</b><br/><font point-size="9">Level 5: devices, gateway, cloud</font>>, fillcolor="#FDEBD0", color="#B7791F"];
   s7 [label=<<b>7. Functional view</b><br/><font point-size="9">IoT-A functional groups</font>>];
-  s8 [label=<<b>8. Operational view</b><br/><font point-size="9">Raspberry Pi, MQTT/TLS, cloud</font>>];
+  s8 [label=<<b>8. Operational view</b><br/><font point-size="9">Gateway, MQTT/TLS, cloud</font>>];
   s9 [label=<<b>9. Device &amp; component integration</b><br/><font point-size="9">tap, gateway, cloud wiring</font>>];
   s10 [label=<<b>10. Application development</b><br/><font point-size="9">ML pipeline: reproduce, improve, extend</font>>, fillcolor="#D7EFF1", color="#0E9AA7"];
   { rank=same; s1; s10; } { rank=same; s2; s9; } { rank=same; s3; s8; } { rank=same; s4; s7; } { rank=same; s5; s6; }
