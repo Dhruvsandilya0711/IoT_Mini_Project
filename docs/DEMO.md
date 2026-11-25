@@ -7,7 +7,7 @@ report, which uses the full experiments.
 ## 1. Prepare on Kaggle (the evening before, about 10 minutes)
 
 Either import `notebooks/demo.ipynb` (Kaggle: **File → Import Notebook**, upload the file; do not paste its text into a
-cell) or make a new notebook with the three cells below. Attach the dataset **CICIoT2023 by CongyuanXu** and turn
+cell) or make a new notebook with the four cells below. Attach the dataset **CICIoT2023 by CongyuanXu** and turn
 **Internet on**. First cell:
 
 ```
@@ -32,6 +32,13 @@ Third cell (flows arriving one at a time, with an alert for each detected attack
 !python scripts/detect.py --model demo/gateway_dt.joblib --flows demo/demo_flows.csv --stream 40 --classes Benign Web BruteForce Recon --rate 4
 ```
 
+Fourth cell (only the rare attacks). The demo file holds far more Recon flows than Web or Brute Force flows, so the
+third cell is mostly Recon; this one replays Web and Brute Force flows only:
+
+```
+!python scripts/detect.py --model demo/gateway_dt.joblib --flows demo/demo_flows.csv --stream 30 --classes Web BruteForce --rate 3
+```
+
 Then **Save Version → Save & Run All**. The saved version keeps every output, so it doubles as a backup that
 needs nothing to run.
 
@@ -39,6 +46,6 @@ needs nothing to run.
 
 1. **Problem** (1 min): `docs/results.html`, the "1 in 2,588" grid.
 2. **Results** (2 min): the recall chart (paper vs ours), then the rebalancing chart and table.
-3. **Live** (3 min): the second cell (per-class recall, µs per flow, memory), then the third cell (ALERT lines
-   for Web and BruteForce flows).
+3. **Live** (3 min): the second cell (per-class recall, µs per flow, memory), then the fourth cell (ALERT lines
+   for Web and Brute Force flows); the third cell shows a mixed stream if there is time.
 4. **Close** (1 min): 20 of 46 features, the 1 MB tree, the Level 5 gateway design, limitations.
