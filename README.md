@@ -47,11 +47,12 @@ src/
   analyze.py            aggregate runs over seeds into report tables and figures
   plots.py              figure styling
 scripts/run_experiments.sh   the full experiment matrix, phase by phase
-scripts/pi_detect.py         replay flows through a saved model on a Raspberry Pi gateway
+scripts/detect.py            replay flows through a saved model the way the gateway would
+scripts/demo_prepare.py      build the demo model and flow files from a few CSV parts
 tests/                  fake-data generator + end-to-end test
 data/                   raw and processed data (not committed, see data/README.md)
 results/                runs.csv, per-class tables, confusion matrices, figures
-docs/                   course brief, Kaggle and Raspberry Pi guides, interactive results page (results.html)
+docs/                   course brief, Kaggle guide, demo guide, interactive results page (results.html)
 report/                 project report: build_report.py -> report.html -> Mini_Project_Report.pdf, figures, diagrams (Graphviz)
 slides/                 Phase 1 proposal and Phase 2 results decks
 ```
@@ -101,9 +102,9 @@ Every command has `--help`. Runs already in `results/runs.csv` are skipped (use 
 
 Step-by-step guide: [`docs/KAGGLE_STEPS.md`](docs/KAGGLE_STEPS.md). In a Kaggle notebook cell, `!python scripts/kaggle_run.py` (after cloning the repo) runs every phase and packs the results into `results.zip`.
 
-### On a Raspberry Pi (edge gateway demo)
+### Live demo
 
-Train the class-weighted Decision Tree on the Pi and replay flows through it with `scripts/pi_detect.py`: [`docs/RASPBERRY_PI.md`](docs/RASPBERRY_PI.md).
+One Kaggle cell prepares a trained gateway model and real flows to replay; steps and running order in [`docs/DEMO.md`](docs/DEMO.md).
 
 ### By hand on Kaggle or Colab
 

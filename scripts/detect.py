@@ -1,14 +1,14 @@
-"""Run a trained detector as an edge IDS, e.g. on a Raspberry Pi acting as the IoT gateway.
+"""Run a trained detector the way the IoT gateway would, on recorded CICIoT2023 flows.
 
-Replays recorded flows through a model saved with `python -m src.train ... --save-model` and reports
-detection quality, prediction time per flow, throughput, memory and CPU temperature.
+Replays flows through a model saved with `python -m src.train ... --save-model` (or by
+scripts/demo_prepare.py) and reports detection quality, prediction time per flow, throughput and memory.
 
-    # whole test split at once: quality + throughput
-    python scripts/pi_detect.py --model pi_results/models/8c-dt-classweight-kall-s0.joblib
+    # all flows at once: quality + throughput
+    python scripts/detect.py --model demo/gateway_dt.joblib --flows demo/demo_flows.csv
 
     # one flow at a time, like a gateway receiving traffic; print an alert for every attack
-    python scripts/pi_detect.py --model pi_results/models/8c-dt-classweight-kall-s0.joblib \\
-        --stream 300 --classes Benign Web BruteForce Recon
+    python scripts/detect.py --model demo/gateway_dt.joblib --flows demo/demo_flows.csv \\
+        --stream 40 --classes Benign Web BruteForce Recon --rate 4
 
 --flows takes a processed split (data/processed/test.parquet, the default) or a raw CICIoT2023 CSV part.
 """

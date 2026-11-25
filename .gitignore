@@ -15,3 +15,6 @@ venv/
 
 # Raw per-run test predictions (~18 MB); the significance tables in results/tables are computed from them.
 results/predictions/
+
+# Demo files made by scripts/demo_prepare.py
+demo/

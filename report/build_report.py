@@ -344,7 +344,7 @@ system.</p>"""
         ["src/feature_selection.py", "Mutual-information, RF-importance and RFE rankings on the training data"],
         ["src/stats.py, src/analyze.py", "Bootstrap confidence intervals, McNemar tests, tables and figures"],
         ["scripts/kaggle_run.py", "Runs every phase on Kaggle and packs the results"],
-        ["scripts/pi_detect.py", "Replays recorded flows through a saved model on a Raspberry Pi gateway"],
+        ["scripts/detect.py", "Replays recorded flows through a saved model the way the gateway would, raising alerts"],
     ]
     design = f"""
 {H.h2('3', 'IoT system design', 's3')}
@@ -652,9 +652,8 @@ Handling the imbalance in the training data raised the Random Forest's macro-F1 
 {f3(rf_smote.test_minority_recall)}, and all of these gains are statistically significant. Feature selection kept
 that quality with 20 of the 46 features, and a class-weighted Decision Tree gets almost the same macro-F1 in about
 1&nbsp;MB.</p>
-<p><b>Future work.</b> The next step is to run the selected model on a Raspberry Pi with live traffic capture and
-measure the end-to-end latency; the repository already includes a script that replays recorded flows through a saved
-model on a Pi (Appendix A). Other directions are testing whether the models transfer to CIC IoT-DIAD 2024 [15] and
+<p><b>Future work.</b> The next step is to deploy the selected model on a real gateway device with live traffic
+capture and measure the end-to-end latency. Other directions are testing whether the models transfer to CIC IoT-DIAD 2024 [15] and
 the Dalhousie IoT 2024 dataset [16], tuning LightGBM for imbalanced data, and trying a two-stage detector that first
 separates out the common floods and then hands the remaining traffic to a specialist model.</p>"""
 
@@ -691,9 +690,9 @@ experiment (baseline, improvement, extension and duplicates) and packs the outpu
 seconds.</li>
 <li><b>Rebuilding this report.</b> <code>python scripts/report_figures.py</code> and
 <code>python report/build_report.py</code> rebuild the figures and the report from the results.</li>
-<li><b>Raspberry Pi.</b> <code>scripts/pi_detect.py</code> replays recorded flows through a saved model on a
-Raspberry Pi and reports alerts, time per flow and memory use; <code>docs/RASPBERRY_PI.md</code> explains the
-setup.</li>
+<li><b>Demo.</b> <code>scripts/demo_prepare.py</code> trains the gateway model on a few CSV files, and
+<code>scripts/detect.py</code> replays recorded flows through it, raising alerts and reporting time per flow and
+memory use; <code>docs/DEMO.md</code> explains the steps.</li>
 </ul>"""
 
     css = """
